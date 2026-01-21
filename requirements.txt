@@ -1,0 +1,11 @@
+numpy
+opencv-python
+matplotlib
+pytesseract
+pdf2image
+layoutparser
+sentence-transformers
+torch
+transformers
+tqdm
+Pillow

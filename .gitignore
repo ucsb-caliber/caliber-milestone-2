@@ -8,11 +8,13 @@
 !exam_tests/**
 !layout_debug/
 !layout_debug/**
+!requirements.txt
+!README.md
 
-# Always keep the ignore file itself
+
 !.gitignore
 
-# --- Exclude Python junk anywhere (even inside allowed folders) ---
+# --- Exclude Python junk---
 **/__pycache__/
 **/*.py[cod]
 **/*.pyo
