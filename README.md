@@ -1,4 +1,4 @@
-# Caliber Milestone 2 – PDF Question Parsing & Embeddings
+# Caliber Milestone 2
 
 This repository contains a simple Python pipeline to:
 
@@ -135,7 +135,7 @@ START_PAGE = 1
 END_PAGE = 10
 ```
 
-### Disable crop display (headless / Windows-friendly)
+### Disable crop display
 
 ```python
 SHOW_CROPS = False
