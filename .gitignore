@@ -1,0 +1,36 @@
+# Ignore everything by default
+*
+
+# Allow only these project folders
+!server/
+!server/**
+!exam_tests/
+!exam_tests/**
+!layout_debug/
+!layout_debug/**
+
+# Always keep the ignore file itself
+!.gitignore
+
+# --- Exclude Python junk anywhere (even inside allowed folders) ---
+**/__pycache__/
+**/*.py[cod]
+**/*.pyo
+**/*.pyd
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+
+# --- Exclude virtual environments anywhere ---
+**/.venv/
+**/venv/
+**/env/
+**/ENV/
+**/pyvenv.cfg
+**/bin/
+**/lib/
+**/lib64/
+**/site-packages/
+
+# macOS
+**/.DS_Store
