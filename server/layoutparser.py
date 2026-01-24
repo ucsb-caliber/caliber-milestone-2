@@ -1,4 +1,8 @@
 import os
+import io
+import base64
+import shutil
+import subprocess
 import re
 import json
 import hashlib
@@ -7,10 +11,10 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Tuple, Optional, Dict, Any
-
+from openai import OpenAI
 import layoutparser as lp
 from pdf2image import convert_from_path
-
+from PIL import Image
 import numpy as np
 import cv2
 import pytesseract
@@ -34,22 +38,28 @@ CROP_PADDING = 10     # pixels of padding around bbox
 
 QUESTIONS_DB_FILENAME = "questions.json"  # stored inside OUTPUT_DIR
 
+DEBUG = False
 
+# WSL Ollama API setup. May take some system tweaking...
+win_ip = subprocess.check_output("ip route show | grep default | awk '{print $3}'", shell=True).decode().strip()
+client = OpenAI(
+    base_url=f'http://{win_ip}:11434/v1',
+    api_key='ollama', # required but not actually used
+    timeout=300.0  
+)
 # ===================== QUESTION DETECTION =====================
 
 QUESTION_START_PATTERNS = [
     r"^\s*Problem\s+\d+\b",
     r"^\s*Question\s+\d+\b",
     r"^\s*Q\s*\d+\b",
+    r"^\s*\d+\.\s+.+[. ?:].*"
 ]
 
 QUESTION_START_RE = re.compile("|".join(QUESTION_START_PATTERNS), re.IGNORECASE)
-
 NUMBERED_ITEM_SPLIT_RE = re.compile(r"(?=\n?\s*\d+\s*[\.\)])")
 
 
-def is_question_start(text: str) -> bool:
-    return bool(QUESTION_START_RE.match(text.strip()))
 
 
 # ===================== DATA STRUCTURES =====================
@@ -59,6 +69,7 @@ class Block:
     page: int
     bbox: Tuple[int, int, int, int]
     text: str
+    btype: str
 
 
 @dataclass
@@ -96,7 +107,6 @@ class Question:
 
     def page_nums(self) -> List[int]:
         return sorted({b.page for b in self.blocks})
-
 
 # ===================== HELPERS =====================
 
@@ -157,6 +167,54 @@ def load_questions_db(db_path: Path) -> Dict[str, Any]:
             pass
         return {"schema_version": "1.0", "ingestions": []}
 
+def keep_largest_blocks(layout: lp.Layout, threshold: int=0.9) -> lp.Layout: # Filters out redundant blocks from layout
+    sorted_layout = sorted(layout, key=lambda x: x.block.area, reverse=True)
+    
+    keep = []
+    
+    while sorted_layout:
+      
+        large_block = sorted_layout.pop(0)
+        keep.append(large_block)
+        
+        remaining = []
+        for small_block in sorted_layout:
+            
+            x1 = max(large_block.block.x_1, small_block.block.x_1)
+            y1 = max(large_block.block.y_1, small_block.block.y_1)
+            x2 = min(large_block.block.x_2, small_block.block.x_2)
+            y2 = min(large_block.block.y_2, small_block.block.y_2)
+            
+            inter_area = max(0, x2 - x1) * max(0, y2 - y1)
+            
+            small_area = small_block.block.area
+            
+            if small_area > 0:
+                coverage = inter_area / small_area
+            else:
+                coverage = 0
+            
+            if coverage < threshold:
+                remaining.append(small_block)
+        
+        sorted_layout = remaining
+        
+    return lp.Layout(keep)
+
+def is_question_start(block: Block) -> bool:
+    return bool(QUESTION_START_RE.match(block.text.strip()))
+
+def encode_image(image: Image.Image, format: str = 'JPEG') -> str: 
+    if format.upper() == 'JPEG' and image.mode in ("RGBA", "P"):
+        image = image.convert("RGB")
+
+    buffer = io.BytesIO()
+    image.save(buffer, quality=80 ,format=format)
+    img_bytes = buffer.getvalue()
+    base64_bytes = base64.b64encode(img_bytes)
+    base64_string = base64_bytes.decode('ascii')
+    
+    return base64_string
 
 # ===================== IMAGE + OCR =====================
 
@@ -165,10 +223,10 @@ def pil_to_bgr_np(pil_img) -> np.ndarray:
     return cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
 
 
-def ocr_crop(bgr: np.ndarray, bbox: Tuple[int, int, int, int]) -> str:
+def ocr_crop(bgr: np.ndarray, bbox: Tuple[int, int, int, int], padding: int = 30) -> str:
     x1, y1, x2, y2 = bbox
     h, w = bgr.shape[:2]
-
+    x1 -= padding   # padding helps capture question starts
     x1 = max(0, min(x1, w - 1))
     x2 = max(0, min(x2, w))
     y1 = max(0, min(y1, h - 1))
@@ -227,8 +285,20 @@ def parse_pdf_to_questions(pdf_path: Path) -> List[Question]:
     start = max(1, START_PAGE)
     end = END_PAGE or last_page
     end = min(end, last_page)
-
-    model = lp.AutoLayoutModel("lp://efficientdet/PubLayNet/tf_efficientdet_d1")
+    
+    try:
+        model = lp.Detectron2LayoutModel(
+            config_path = 'lp://PubLayNet/mask_rcnn_X_101_32x8d_FPN_3x/config', # manually added model path needed on Windows
+            model_path = 'bigboy.pth',
+            extra_config=[
+                "MODEL.ROI_HEADS.SCORE_THRESH_TEST", 0.2,  
+                "MODEL.ROI_HEADS.NMS_THRESH_TEST", 0.1
+            ],
+            label_map= {0: "Text", 1: "Title", 2: "List", 3: "Table", 4: "Figure"}
+            )
+    except Exception:
+        print('Falling back to tf_efficientdet_d1')
+        model = lp.AutoLayoutModel("lp://efficientdet/PubLayNet/tf_efficientdet_d1")
 
     all_questions: List[Question] = []
     current_question: Optional[Question] = None
@@ -239,29 +309,60 @@ def parse_pdf_to_questions(pdf_path: Path) -> List[Question]:
         bgr = pil_to_bgr_np(page_img)
 
         layout = model.detect(page_img)
+        layout = keep_largest_blocks(layout, threshold=0.9)
+        if DEBUG:
+            SAVE_PATH = os.path.join('pages', f"debug_page_{page_num}.png")
+            lp.draw_box(page_img, layout, box_width=3, show_element_type=True).save(SAVE_PATH)
 
         page_blocks: List[Block] = []
 
         for b in layout:
-            if b.type not in ("Text", "Title", "List"):
-                continue
-
             x1, y1, x2, y2 = map(int, b.block.coordinates)
-            text = ocr_crop(bgr, (x1, y1, x2, y2))
+            if b.type == 'Figure': # comment out if Ollama not setup
+                crop = page_img.crop((x1, y1, x2, y2))
+                base64 = encode_image(crop)
+                print("Annotating Figure with qwen3-vl")
+                response = client.chat.completions.create(
+                    model="qwen3-vl:235b-cloud", 
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": [
+                                {"type": "text", "text": "Annotate this image from a Computer Science Exam. Output only the annotation, do NOT include conversational phrases such as 'Certainly here is your annotation: ' or add comments/notes."},
+                                {
+                                    "type": "image_url",
+                                    "image_url": {"url": f"data:image/png;base64,{base64}"}
+                                }
+                            ]
+                        }
+                    ],
+                    temperature=0.0,
+                )
+                print('Done!')
+                text = f"FIGURE[{response.choices[0].message.content}]"
+            else: 
+                text = ocr_crop(bgr, (x1, y1, x2, y2))
             if not text:
                 continue
-
-            for unit in split_block_text(text):
+            
+            page_blocks.append(Block(
+                    page=page_num,
+                    bbox=(x1, y1, x2, y2),
+                    text=text,
+                    btype = b.type
+                ))
+            for unit in split_block_text(text): # Harmful if using upgraded lp model
                 page_blocks.append(Block(
                     page=page_num,
                     bbox=(x1, y1, x2, y2),
-                    text=unit
+                    text=unit,
+                    btype = b.type
                 ))
 
         page_blocks = sort_blocks_reading_order(page_blocks, Y_TOL)
 
         for block in page_blocks:
-            if is_question_start(block.text):
+            if is_question_start(block):
                 if current_question is not None:
                     all_questions.append(current_question)
                 current_question = Question(start_page=block.page)
@@ -295,7 +396,7 @@ def crop_and_output_questions(pdf_path: Path, questions: List[Question], crops_d
 
     for qi, q in enumerate(questions, 1):
         per_page = q.bboxes_by_page()
-
+        
         for page_num, bbox in sorted(per_page.items()):
             page_img = pages[page_num - 1]  # PIL
             w, h = page_img.size
@@ -372,11 +473,20 @@ def main():
 
     ingestion_id = make_ingestion_id(created_at=created_at, source_pdf=source_pdf, exam_id=exam_id)
 
+    if DEBUG:
+        if os.path.exists('pages'):
+            shutil.rmtree('pages')
+        os.makedirs('pages')
+        with open("Output.txt", "w") as text_file:
+            pass
     # Parse questions
     questions = parse_pdf_to_questions(pdf_path)
-
     # Assign question_ids + placeholders
     for i, q in enumerate(questions, 1):
+        if DEBUG:
+            with open("Output.txt", "a") as text_file:
+                text_file.write(f"{q.text}\n")
+                text_file.write("=====" * 20 + "\n")
         q.question_id = make_question_id(exam_id=exam_id, ingestion_id=ingestion_id, question_index=i)
         q.qtype = None
         q.metadata = {}
