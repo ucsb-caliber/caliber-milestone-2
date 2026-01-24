@@ -289,7 +289,6 @@ def parse_pdf_to_questions(pdf_path: Path) -> List[Question]:
     try:
         model = lp.Detectron2LayoutModel(
             config_path = 'lp://PubLayNet/mask_rcnn_X_101_32x8d_FPN_3x/config', # manually added model path needed on Windows
-            model_path = 'bigboy.pth',
             extra_config=[
                 "MODEL.ROI_HEADS.SCORE_THRESH_TEST", 0.2,  
                 "MODEL.ROI_HEADS.NMS_THRESH_TEST", 0.1
