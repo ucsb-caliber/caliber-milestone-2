@@ -18,10 +18,10 @@ from PIL import Image
 import numpy as np
 import cv2
 import pytesseract
-
+import time
+import concurrent.futures
 import matplotlib.pyplot as plt
-
-
+from pytesseract import Output
 # ===================== CONFIG =====================
 
 PDF_PATH = "exam_tests/practicefinal3.pdf"
@@ -38,15 +38,10 @@ CROP_PADDING = 10     # pixels of padding around bbox
 
 QUESTIONS_DB_FILENAME = "questions.json"  # stored inside OUTPUT_DIR
 
-DEBUG = False
+DEBUG = True
 
 # WSL Ollama API setup. May take some system tweaking...
 win_ip = subprocess.check_output("ip route show | grep default | awk '{print $3}'", shell=True).decode().strip()
-client = OpenAI(
-    base_url=f'http://{win_ip}:11434/v1',
-    api_key='ollama', # required but not actually used
-    timeout=300.0  
-)
 # ===================== QUESTION DETECTION =====================
 
 QUESTION_START_PATTERNS = [
@@ -58,9 +53,6 @@ QUESTION_START_PATTERNS = [
 
 QUESTION_START_RE = re.compile("|".join(QUESTION_START_PATTERNS), re.IGNORECASE)
 NUMBERED_ITEM_SPLIT_RE = re.compile(r"(?=\n?\s*\d+\s*[\.\)])")
-
-
-
 
 # ===================== DATA STRUCTURES =====================
 
@@ -167,6 +159,145 @@ def load_questions_db(db_path: Path) -> Dict[str, Any]:
             pass
         return {"schema_version": "1.0", "ingestions": []}
 
+
+def is_question_start(block: Block) -> bool:
+    return bool(QUESTION_START_RE.match(block.text.strip()))
+
+
+def encode_image(image: Image.Image, format: str = 'JPEG') -> str: 
+    if format.upper() == 'JPEG' and image.mode in ("RGBA", "P"):
+        image = image.convert("RGB")
+
+    buffer = io.BytesIO()
+    image.save(buffer, quality=80 ,format=format)
+    img_bytes = buffer.getvalue()
+    base64_bytes = base64.b64encode(img_bytes)
+    base64_string = base64_bytes.decode('ascii')
+    
+    return base64_string
+
+
+def annotate_figure(base64: str, prompt: str) -> str:
+    client = OpenAI(
+        base_url=f'http://{win_ip}:11434/v1',
+        api_key='ollama', # required but not actually used
+        timeout=60.0 
+    )
+    response = client.chat.completions.create(
+        model="qwen3-vl:235b-cloud", 
+        messages=[
+            {
+                "role": "system",
+                "content": [{
+                        "type": "text",
+                        "text": ("You are an image annotator that specializes in CS exam figures.",
+                                "You take as input an image of a figure and the corresponding question text and output a description of the figure.",
+                                "Do NOT output conversational phrases such as 'Certainly here is your annotation' or Notes/Comments.")
+                    }
+                ]
+            },
+            {
+                "role": "user",
+                "content": [{
+                        "type": "text",
+                        "text": f"Annotate this figure that was cropped from a CS exam. The associated question is (DO NOT ANSWER THE QUESTION):\n{prompt}."
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:image/png;base64,{base64}"}
+                    }
+                ]
+            }
+        ],
+        temperature=0.0,
+        timeout=30
+    )
+    return f"FIGURE[{response.choices[0].message.content}]"
+
+
+
+def get_text_within_box(ocr_data: Dict, bbox: Tuple[int, int, int, int], conf_thresh: int = 50) -> str:
+    x1, y1, x2, y2 = bbox
+    words = []
+
+    for i in range(len(ocr_data["text"])):
+        if int(ocr_data["conf"][i]) < conf_thresh:
+            continue
+
+        cx = ocr_data["left"][i] + ocr_data["width"][i] / 2
+        cy = ocr_data["top"][i] + ocr_data["height"][i] / 2
+
+        if x1 <= cx <= x2 and y1 <= cy <= y2:
+            words.append(ocr_data["text"][i])
+
+    return " ".join(words)
+
+
+
+def parse_page(layout: lp.Layout, page_img: Image.Image, page_num: int) -> List[Block]:
+    ocr_data = pytesseract.image_to_data( # process entire page once
+        page_img,
+        output_type=Output.DICT,
+        config="--oem 3 --psm 6 -l eng"
+    )
+    page_blocks: List[Block] = []
+    for b in layout:    
+        x1, y1, x2, y2 = map(int, b.block.coordinates)
+        if b.type == 'Figure': # Not working with concurrent futures
+            # if len(page_blocks)>0:
+            #     prompt = page_blocks[-1].text
+            # crop = page_img.crop((x1, y1, x2, y2))
+            # base64 = encode_image(crop)
+            # print("Annotating Figure with qwen3-vl")
+            # text = annotate_figure(base64, prompt)
+            # print('Done!')
+            text = get_text_within_box(ocr_data, (x1, y1, x2, y2))
+        else: 
+            text = get_text_within_box(ocr_data, (x1, y1, x2, y2)) # use bbox to identify text
+        if not text:
+            continue
+        
+        # for unit in split_block_text(text): # Harmful if using upgraded lp model
+        block = Block(
+            page=page_num,
+            bbox=(x1, y1, x2, y2),
+            text=text,
+            btype = b.type
+        )
+        page_blocks.append(block)
+    return page_blocks
+
+    
+
+# ===================== IMAGE + OCR =====================
+
+def pil_to_bgr_np(pil_img) -> np.ndarray:
+    rgb = np.array(pil_img.convert("RGB"))
+    return cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
+
+
+def ocr_crop(bgr: np.ndarray, bbox: Tuple[int, int, int, int], padding: int = 10) -> str:
+    x1, y1, x2, y2 = bbox
+    h, w = bgr.shape[:2]
+    x1 -= padding   # left padding helps capture question starts
+    x1 = max(0, min(x1, w - 1))
+    x2 = max(0, min(x2, w))
+    y1 = max(0, min(y1, h - 1))
+    y2 = max(0, min(y2, h))
+
+    crop = bgr[y1:y2, x1:x2]
+    if crop.size == 0:
+        return ""
+
+    gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+    gray = cv2.resize(gray, None, fx=2.0, fy=2.0, interpolation=cv2.INTER_CUBIC)
+    gray = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+
+    text = pytesseract.image_to_string(gray, config="--oem 3 --psm 6")
+    return text.replace("\x0c", "").strip()
+
+# ===================== LAYOUT FORMATTING =====================
+
 def keep_largest_blocks(layout: lp.Layout, threshold: int=0.9) -> lp.Layout: # Filters out redundant blocks from layout
     sorted_layout = sorted(layout, key=lambda x: x.block.area, reverse=True)
     
@@ -201,70 +332,25 @@ def keep_largest_blocks(layout: lp.Layout, threshold: int=0.9) -> lp.Layout: # F
         
     return lp.Layout(keep)
 
-def is_question_start(block: Block) -> bool:
-    return bool(QUESTION_START_RE.match(block.text.strip()))
+def sort_layout_reading_order(layout: lp.Layout, y_tol: int) -> lp.Layout: 
+    layout = sorted(layout, key=lambda b: (int(b.block.coordinates[1]), int(b.block.coordinates[0])))
+    rows: List[List[lp.TextBlock]] = []
 
-def encode_image(image: Image.Image, format: str = 'JPEG') -> str: 
-    if format.upper() == 'JPEG' and image.mode in ("RGBA", "P"):
-        image = image.convert("RGB")
-
-    buffer = io.BytesIO()
-    image.save(buffer, quality=80 ,format=format)
-    img_bytes = buffer.getvalue()
-    base64_bytes = base64.b64encode(img_bytes)
-    base64_string = base64_bytes.decode('ascii')
-    
-    return base64_string
-
-# ===================== IMAGE + OCR =====================
-
-def pil_to_bgr_np(pil_img) -> np.ndarray:
-    rgb = np.array(pil_img.convert("RGB"))
-    return cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
-
-
-def ocr_crop(bgr: np.ndarray, bbox: Tuple[int, int, int, int], padding: int = 30) -> str:
-    x1, y1, x2, y2 = bbox
-    h, w = bgr.shape[:2]
-    x1 -= padding   # padding helps capture question starts
-    x1 = max(0, min(x1, w - 1))
-    x2 = max(0, min(x2, w))
-    y1 = max(0, min(y1, h - 1))
-    y2 = max(0, min(y2, h))
-
-    crop = bgr[y1:y2, x1:x2]
-    if crop.size == 0:
-        return ""
-
-    gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
-    gray = cv2.resize(gray, None, fx=2.0, fy=2.0, interpolation=cv2.INTER_CUBIC)
-    gray = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
-
-    text = pytesseract.image_to_string(gray, config="--oem 3 --psm 6")
-    return text.replace("\x0c", "").strip()
-
-
-# ===================== READING ORDER =====================
-
-def sort_blocks_reading_order(blocks: List[Block], y_tol: int) -> List[Block]:
-    blocks = sorted(blocks, key=lambda b: (b.bbox[1], b.bbox[0]))
-    rows: List[List[Block]] = []
-
-    for b in blocks:
+    for b in layout:
         placed = False
         for row in rows:
-            if abs(b.bbox[1] - row[0].bbox[1]) <= y_tol:
+            if abs(b.block.coordinates[1] - row[0].block.coordinates[1]) <= y_tol:
                 row.append(b)
                 placed = True
                 break
         if not placed:
             rows.append([b])
 
-    ordered: List[Block] = []
+    ordered: List[lp.TextBlock] = []
     for row in rows:
-        ordered.extend(sorted(row, key=lambda b: b.bbox[0]))
+        ordered.extend(sorted(row, key=lambda b: b.block.coordinates[0]))
 
-    return ordered
+    return lp.Layout(ordered)
 
 
 # ===================== TEXT NORMALIZATION =====================
@@ -278,99 +364,44 @@ def split_block_text(text: str) -> List[str]:
 
 # ===================== MAIN PARSER =====================
 
-def parse_pdf_to_questions(pdf_path: Path) -> List[Question]:
-    pages = convert_from_path(str(pdf_path))
+def parse_pdf_to_questions(pages: List[Image.Image], model: Any) -> List[Question]:
     last_page = len(pages)
-
     start = max(1, START_PAGE)
     end = END_PAGE or last_page
     end = min(end, last_page)
     
-    try:
-        model = lp.Detectron2LayoutModel(
-            config_path = 'lp://PubLayNet/mask_rcnn_X_101_32x8d_FPN_3x/config', # manually added model path needed on Windows
-            model_path = 'bigboy.pth',
-            extra_config=[
-                "MODEL.ROI_HEADS.SCORE_THRESH_TEST", 0.2,  
-                "MODEL.ROI_HEADS.NMS_THRESH_TEST", 0.1
-            ],
-            label_map= {0: "Text", 1: "Title", 2: "List", 3: "Table", 4: "Figure"}
-            )
-    except Exception:
-        print('Falling back to tf_efficientdet_d1')
-        model = lp.AutoLayoutModel("lp://efficientdet/PubLayNet/tf_efficientdet_d1")
-
     all_questions: List[Question] = []
     current_question: Optional[Question] = None
+    with concurrent.futures.ProcessPoolExecutor(max_workers=os.cpu_count() - 1) as executor:
+        futures = []
+        for page_idx in range(start - 1, end):
+            page_num = page_idx + 1
+            page_img = pages[page_idx]
+            layout = model.detect(page_img)
+            layout = keep_largest_blocks(layout, threshold=0.9)
+            layout = sort_layout_reading_order(layout, Y_TOL)
+            if DEBUG:
+                SAVE_PATH = os.path.join('pages', f"debug_page_{page_num}.png")
+                lp.draw_box(page_img, layout, box_width=3, show_element_type=True).save(SAVE_PATH)
 
-    for page_idx in range(start - 1, end):
-        page_num = page_idx + 1
-        page_img = pages[page_idx]
-        bgr = pil_to_bgr_np(page_img)
-
-        layout = model.detect(page_img)
-        layout = keep_largest_blocks(layout, threshold=0.9)
-        if DEBUG:
-            SAVE_PATH = os.path.join('pages', f"debug_page_{page_num}.png")
-            lp.draw_box(page_img, layout, box_width=3, show_element_type=True).save(SAVE_PATH)
-
-        page_blocks: List[Block] = []
-
-        for b in layout:
-            x1, y1, x2, y2 = map(int, b.block.coordinates)
-            if b.type == 'Figure': # comment out if Ollama not setup
-                crop = page_img.crop((x1, y1, x2, y2))
-                base64 = encode_image(crop)
-                print("Annotating Figure with qwen3-vl")
-                response = client.chat.completions.create(
-                    model="qwen3-vl:235b-cloud", 
-                    messages=[
-                        {
-                            "role": "user",
-                            "content": [
-                                {"type": "text", "text": "Annotate this image from a Computer Science Exam. Output only the annotation, do NOT include conversational phrases such as 'Certainly here is your annotation: ' or add comments/notes."},
-                                {
-                                    "type": "image_url",
-                                    "image_url": {"url": f"data:image/png;base64,{base64}"}
-                                }
-                            ]
-                        }
-                    ],
-                    temperature=0.0,
-                )
-                print('Done!')
-                text = f"FIGURE[{response.choices[0].message.content}]"
-            else: 
-                text = ocr_crop(bgr, (x1, y1, x2, y2))
-            if not text:
-                continue
-            
-            page_blocks.append(Block(
-                    page=page_num,
-                    bbox=(x1, y1, x2, y2),
-                    text=text,
-                    btype = b.type
-                ))
-            for unit in split_block_text(text): # Harmful if using upgraded lp model
-                page_blocks.append(Block(
-                    page=page_num,
-                    bbox=(x1, y1, x2, y2),
-                    text=unit,
-                    btype = b.type
-                ))
-
-        page_blocks = sort_blocks_reading_order(page_blocks, Y_TOL)
-
-        for block in page_blocks:
-            if is_question_start(block):
-                if current_question is not None:
-                    all_questions.append(current_question)
-                current_question = Question(start_page=block.page)
-                current_question.add_block(block)
-            else:
-                if current_question is not None:
+            future = executor.submit(
+                parse_page,
+                layout,
+                page_img,
+                page_num,
+            )
+            futures.append((page_num, future))
+        futures.sort()
+        for future in futures:
+            for block in future[1].result():
+                if is_question_start(block) and block.btype in ['Text', 'Title']:
+                    if current_question is not None:
+                        all_questions.append(current_question)
+                    current_question = Question(start_page=block.page)
                     current_question.add_block(block)
-
+                else:
+                    if current_question is not None:
+                        current_question.add_block(block)
     if current_question is not None:
         all_questions.append(current_question)
 
@@ -390,8 +421,7 @@ def clamp_bbox(bbox: Tuple[int, int, int, int], w: int, h: int, pad: int = 0) ->
     return (x1, y1, x2, y2)
 
 
-def crop_and_output_questions(pdf_path: Path, questions: List[Question], crops_dir: Path):
-    pages = convert_from_path(str(pdf_path))
+def crop_and_output_questions(pages: List[Image.Image], questions: List[Question], crops_dir: Path):
     crops_dir.mkdir(parents=True, exist_ok=True)
 
     for qi, q in enumerate(questions, 1):
@@ -479,8 +509,27 @@ def main():
         os.makedirs('pages')
         with open("Output.txt", "w") as text_file:
             pass
+
+    print('Loading model...')
+    try:
+        model = lp.Detectron2LayoutModel(
+            config_path = 'lp://PubLayNet/faster_rcnn_R_50_FPN_3x/config', 
+            model_path = 'model_final.pth', # manually added model path needed on Windows
+            extra_config=[
+                "MODEL.ROI_HEADS.SCORE_THRESH_TEST", 0.2,  
+                "MODEL.ROI_HEADS.NMS_THRESH_TEST", 0.1
+            ],
+            label_map= {0: "Text", 1: "Title", 2: "List", 3: "Table", 4: "Figure"}
+        )
+    except:
+        print('Falling back to tf_efficientdet_d1')
+        model = lp.AutoLayoutModel("lp://efficientdet/PubLayNet/tf_efficientdet_d1")
+    print('Done!')
+
+    pages = convert_from_path(str(pdf_path))
     # Parse questions
-    questions = parse_pdf_to_questions(pdf_path)
+    questions = parse_pdf_to_questions(pages, model)
+
     # Assign question_ids + placeholders
     for i, q in enumerate(questions, 1):
         if DEBUG:
@@ -504,7 +553,7 @@ def main():
 
     # Crop output directory organized by exam_id / ingestion_id
     crops_dir = Path(OUTPUT_DIR) / "crops" / exam_id / ingestion_id
-    crop_and_output_questions(pdf_path, questions, crops_dir=crops_dir)
+    crop_and_output_questions(pages, questions, crops_dir=crops_dir)
 
     # Append to nested-ingestions DB
     db_path = Path(OUTPUT_DIR) / QUESTIONS_DB_FILENAME
