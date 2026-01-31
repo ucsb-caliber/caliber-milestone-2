@@ -7,7 +7,7 @@
 !exam_tests/
 !exam_tests/**
 !layout_debug/
-!layout_debug/**
+!layout_debug/*
 !requirements.txt
 !README.md
 
