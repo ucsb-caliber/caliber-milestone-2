@@ -65,6 +65,7 @@ nvidia-nccl-cu12==2.27.5
 nvidia-nvjitlink-cu12==12.8.93
 nvidia-nvshmem-cu12==3.4.5
 nvidia-nvtx-cu12==12.8.90
+ollama==0.6.1
 omegaconf==2.3.0
 openai==2.15.0
 opencv-contrib-python==4.10.0.84
