@@ -1,14 +1,88 @@
+````md
 # Caliber Milestone 2
 
-This repository contains a simple Python pipeline to:
+This repository contains a Python pipeline to:
 
-1. Parse a PDF exam into structured **question text** using layout detection + OCR
-2. Save question metadata and optional image crops to a JSON database
-3. Embed all extracted questions using a SentenceTransformer model
+1. Parse a PDF exam into structured **question text** using layout detection + OCR  
+2. Save question metadata and optional image crops to a JSON database  
+3. (Optional) Embed extracted questions downstream  
+
+The pipeline can be run **locally** or **via Docker (recommended for consistency)**.
 
 ---
 
-## Setup (macOS & Windows)
+## Recommended: Run with Docker (Cross-platform, reproducible)
+
+Docker avoids OS-specific issues with:
+- Tesseract / Poppler installation
+- PyTorch + Detectron2 compatibility
+- macOS vs Windows vs Linux differences
+
+### Prerequisites
+- Docker Desktop installed  
+  https://www.docker.com/products/docker-desktop/
+
+---
+
+### Build the Docker image
+
+From the repo root:
+
+```bash
+docker build -t caliber-layout-ingest .
+````
+
+---
+
+### Run the pipeline in Docker
+
+```bash
+docker run --rm -it \
+  -v "$PWD:/app" \
+  caliber-layout-ingest
+```
+
+You’ll be prompted:
+
+```text
+Enter exam id:
+```
+
+Example:
+
+```text
+hw3
+```
+
+Outputs (JSON + crops) are written to:
+
+```text
+layout_debug/
+```
+
+because the repo is mounted into the container.
+
+---
+
+### Optional Docker flags
+
+Disable crop display (recommended in Docker):
+
+```bash
+docker run --rm -it \
+  -v "$PWD:/app" \
+  -e SHOW_CROPS=0 \
+  caliber-layout-ingest
+```
+
+---
+
+## Local Setup (macOS & Windows)
+
+> ⚠️ Local setup is more fragile due to system dependencies.
+> Use Docker unless you explicitly need a local environment.
+
+---
 
 ### 1. Create a virtual environment
 
@@ -42,7 +116,7 @@ pip install -r requirements.txt
 
 ---
 
-## System Dependencies (Required)
+## System Dependencies (Local Only)
 
 This project uses **OCR and PDF rendering**, which require system tools.
 
@@ -67,12 +141,12 @@ which tesseract
 
 ### Windows
 
-#### 1. Install Poppler
+#### Install Poppler
 
-* Download Poppler for Windows:
+* Download:
   [https://github.com/oschwartz10612/poppler-windows/releases](https://github.com/oschwartz10612/poppler-windows/releases)
-* Extract it (e.g. to `C:\poppler`)
-* Add `C:\poppler\Library\bin` to your **PATH**
+* Extract (e.g. `C:\poppler`)
+* Add `C:\poppler\Library\bin` to **PATH**
 
 Verify:
 
@@ -80,9 +154,11 @@ Verify:
 pdfinfo -v
 ```
 
-#### 2. Install Tesseract
+---
 
-* Download installer:
+#### Install Tesseract
+
+* Download:
   [https://github.com/UB-Mannheim/tesseract/wiki](https://github.com/UB-Mannheim/tesseract/wiki)
 * During install, **check “Add to PATH”**
 
@@ -94,27 +170,25 @@ tesseract --version
 
 ---
 
-## Running the Pipeline
-
+## Running the Pipeline (Local)
 
 From the repo root:
 
 ```bash
-python server/layoutparser.py
+python server/layout_ingest.py
 ```
 
 You’ll be prompted:
 
-```
+```text
 Enter exam id:
 ```
 
 Example:
 
-```
+```text
 practicefinal3
 ```
-
 
 ---
 
@@ -122,11 +196,13 @@ practicefinal3
 
 ### Change input PDF
 
-In `server/test_sample.py`:
+In `server/layout_ingest.py`:
 
 ```python
 PDF_PATH = "exam_tests/practicefinal3.pdf"
 ```
+
+---
 
 ### Change page range
 
@@ -135,10 +211,52 @@ START_PAGE = 1
 END_PAGE = 10
 ```
 
+---
+
 ### Disable crop display
 
 ```python
 SHOW_CROPS = False
 ```
+
+Or (Docker-friendly):
+
+```bash
+export SHOW_CROPS=0
+```
+
 ---
 
+## Notes
+
+* Docker uses **CPU-only execution** by default.
+* Detectron2 is preferred when available; EfficientDet is used as a fallback.
+* All outputs are deterministic when run in Docker.
+
+---
+
+## Troubleshooting
+
+If something works locally but not in Docker:
+
+* Rebuild with no cache:
+
+  ```bash
+  docker build --no-cache -t caliber-layout-ingest .
+  ```
+
+* Ensure you removed any OS-specific shell calls (`ip route`, etc.).
+
+* Ensure there is **no local file named `layoutparser.py`** (this breaks imports).
+
+---
+
+## Recommendation
+
+For team development and grading:
+
+> **Use Docker.**
+> It eliminates OS drift and “works on my machine” bugs.
+
+```
+```
