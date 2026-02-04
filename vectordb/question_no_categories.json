@@ -1,0 +1,84 @@
+{
+    "schema_version": "1.0",
+    "ingestions": [
+      {
+        "ingestion_id": "ing_a19eb6d72e43f129",
+        "created_at": "2026-01-21T00:20:05.330487Z",
+        "source_pdf": "exam_tests/practicefinal2.pdf",
+        "exam_id": "practicefinal2",
+        "questions": [
+          {
+            "question_id": "q_ef2a9689e7466caf",
+            "category": "Algorithm analysis",
+            "start_page": 2,
+            "page_nums": [
+              2
+            ],
+            "text": "Problem 1\nror each of the following, give a worst-case runtime, and a brief explanation (a sentence or two). In\ncases where the algorithm isn’t specified, use the best one you can think of.\n1. Removing the minimum element from a heap that contains n items\n2. Constructing a minimum spanning tree for a connected graph with n nodes and n? edges using\nKruskal’s algorithm\n3. Determining whether an item occurs in an unsorted singly-linked list\n\n4, Sorting n integers, all between 0 and 9, where n is much greater than\n1\n0\n0.\n5. Finding a spanning tree (not necessarily a minimum-weight spanning tree) for a connected\ngraph of n nodes and nlogn edges.\n6. Doing a pre-order traversal for a binary tree with n nodes.",
+            "text_hash": "56ef4e952c9b49f9",
+            "image_crops": [
+              "layout_debug/crops/practicefinal2/ing_a19eb6d72e43f129/q_ef2a9689e7466caf_p002.png"
+            ],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_8bdc212ca4aa5794",
+            "start_page": 8,
+            "page_nums": [
+              8
+            ],
+            "text": "Problem 7\nVrite pseudocode tor a method reverseList( head) that takes In the head of a singly linked-list a:\n-everses’ the list. Note that a singly linked-list is simply a linked list in which every node has\nointer to its next element in the list and the last node’s next pointer points to null. Example: Giv\nlinked listA > B—- C — D with head A the method turns it into the list! D> C7 B- A wi\nead D. Explain the runtime of your solution.",
+            "text_hash": "cbbb4f5eefa61406",
+            "image_crops": [
+              "layout_debug/crops/practicefinal2/ing_a19eb6d72e43f129/q_8bdc212ca4aa5794_p008.png"
+            ],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_cf19fc54564f3dfe",
+            "start_page": 2,
+            "page_nums": [
+              2
+            ],
+            "text": "Question 4\nVhich of the following is a list meth\n1. union\n2. extend\n3. keyerror\n4. add\n5. concatenate",
+            "text_hash": "ca359cc5df631738",
+            "image_crops": [
+              "layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_cf19fc54564f3dfe_p002.png"
+            ],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_aca0a00522a71f18",
+            "start_page": 5,
+            "page_nums": [
+              5
+            ],
+            "text": "Question 12\nVrite a class named ComicBook that inherits the Book class from the previous question. A\n‘omicBook should have an additional boolean attribute is_superhero that indicates whether\nf is a comic about superheroes or not. The value of this attribute should be able to be set when\nnitialized.",
+            "text_hash": "df851802b790a9d1",
+            "image_crops": [
+              "layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_aca0a00522a71f18_p005.png"
+            ],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_a5dfe2c6f9fb1acf",
+            "start_page": 7,
+            "page_nums": [
+              7
+            ],
+            "text": "Question 17\nyVrite a recursive function reverse) that returns the value or 1US (String) Mput paramete\nxcept reversed. For example, reverse(\"Ssummer\") should return \"remmus\".",
+            "text_hash": "08161141dbe0a0b1",
+            "image_crops": [
+              "layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_a5dfe2c6f9fb1acf_p007.png"
+            ],
+            "type": null,
+            "metadata": {}
+          }
+        ]
+      }
+    ]
+}

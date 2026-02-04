@@ -36,9 +36,16 @@ yacs==0.1.8
 
 
 # ---------------------------
-# LLM / API
+# LLM / API / Embeddings
 # ---------------------------
 openai==2.15.0
+FlagEmbedding>=1.2.0
+
+# ---------------------------
+# Database
+# ---------------------------
+sqlalchemy>=2.0.0
+chromadb>=0.4.0
 
 # ---------------------------
 # Optional (only if actually used)
