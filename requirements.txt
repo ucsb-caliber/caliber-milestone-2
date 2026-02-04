@@ -1,11 +1,62 @@
-numpy
-opencv-python
-matplotlib
-pytesseract
-pdf2image
-layoutparser
-sentence-transformers
-torch
-transformers
-tqdm
-Pillow
+# ---------------------------
+# Core Python / Utilities
+# ---------------------------
+numpy==1.26.4
+requests==2.32.5
+tqdm==4.67.1
+regex==2024.11.6
+ujson==5.11.0
+
+# ---------------------------
+# OCR + PDF
+# ---------------------------
+pytesseract==0.3.13
+pdf2image==1.17.0
+pdfminer.six==20231228
+pdfplumber==0.11.5
+pypdfium2==4.30.0
+
+# ---------------------------
+# Imaging / Visualization
+# ---------------------------
+Pillow==9.5.0
+opencv-python-headless==4.9.0.80
+matplotlib==3.8.4
+
+# ---------------------------
+# Layout Detection
+# ---------------------------
+layoutparser==0.3.4
+effdet==0.4.1
+timm==0.9.16
+iopath==0.1.10
+fvcore==0.1.5.post20221221
+pycocotools==2.0.7
+yacs==0.1.8
+
+
+# ---------------------------
+# LLM / API
+# ---------------------------
+openai==2.15.0
+
+# ---------------------------
+# Optional (only if actually used)
+# ---------------------------
+pandas==2.2.2
+scikit-learn==1.4.2
+
+# Detectron2 friends
+pyyaml==6.0.2
+termcolor==2.4.0
+tabulate==0.9.0
+cloudpickle==3.0.0
+
+
+# ---------------------------
+#frontend
+# ---------------------------
+fastapi
+uvicorn[standard]
+python-multipart
+
