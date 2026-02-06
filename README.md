@@ -251,12 +251,6 @@ If something works locally but not in Docker:
 
 ---
 
-## Recommendation
-
-For team development and grading:
-
-> **Use Docker.**
-> It eliminates OS drift and “works on my machine” bugs.
 
 ```
 ```
