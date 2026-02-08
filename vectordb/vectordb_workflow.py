@@ -67,16 +67,19 @@ class DBWorkflow:
         question_text: str,
         n: int = 5,
         threshold: float = 0.5,
+        embedding: list[float] | None = None,
     ) -> str:
         """
         Assign a category from the question text using nearest neighbors in the vector DB.
         Gets the top n closest questions; if > threshold fraction are in the same category,
         returns that category, otherwise returns "Review".
+        If embedding is provided, it is used instead of computing it from question_text.
         """
         if not question_text.strip():
             print("[assign_category] assigned: Review (empty text)")
             return "Review"
-        embedding = self.get_embedding(question_text)
+        if embedding is None:
+            embedding = self.get_embedding(question_text)
         result = self.vector_db.get_n_closest(embedding, n=n)
         ids = result.get("ids") or []
         if not ids:
@@ -102,7 +105,11 @@ class DBWorkflow:
         data = self.load_data()
         for ingestion in data.get("ingestions", []):
             for q in ingestion.get("questions", []):
-                q["category"] = self.assign_category(q.get("text", ""), n=3, threshold=0.5)
+                text = q.get("text", "")
+                embedding = self.get_embedding(text) if text.strip() else None
+                if embedding is not None:
+                    q["_embedding"] = embedding
+                q["category"] = self.assign_category(text, n=3, threshold=0.5, embedding=embedding)
         self.populate(data)
 
     def populate_sql(self, data: dict) -> list[dict]:
@@ -151,13 +158,15 @@ class DBWorkflow:
         return all_questions
 
     def populate_chroma(self, all_questions: list[dict]) -> None:
-        """Add vector embeddings for each question to ChromaDB."""
+        """Add vector embeddings for each question to ChromaDB. Uses precomputed _embedding if present."""
         for q in all_questions:
             text = q.get("text") or ""
-            if not text:
+            if not text and "_embedding" not in q:
                 continue
             question_id = q["question_id"]
-            embedding = self.get_embedding(text)
+            embedding = q.get("_embedding")
+            if embedding is None:
+                embedding = self.get_embedding(text)
             self.vector_db.add_embedding(question_id, embedding)
 
     def populate(self, data: dict) -> None:
@@ -179,7 +188,7 @@ if __name__ == "__main__":
 
     _json_path = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
-        "questions_no_categories.json",
+        "question_no_categories.json",
     )
     workflow = DBWorkflow(json_path=_json_path, has_categories=False)
     workflow.run()
