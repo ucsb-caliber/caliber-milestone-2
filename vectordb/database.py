@@ -1,36 +1,38 @@
-"""
-Database setup: engine, session, and table creation for the vectordb SQLite DB.
-"""
 import os
+from sqlmodel import SQLModel, create_engine, Session
+from dotenv import load_dotenv
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+load_dotenv()
 
-from vectordb.models import Base
+# Import models so SQLModel.metadata is populated (same schema as milestone-one)
+from vectordb import models  # noqa: F401
 
-_base = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_DATABASE_URL = f"sqlite:///{os.path.join(_base, 'questions.db')}"
+# Use SQLite by default for easy local development (same default as milestone-one)
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./data/questionbank.db")
 
-
-def get_engine(url: str | None = None):
-    """Create SQLAlchemy engine for SQLite."""
-    url = url or DEFAULT_DATABASE_URL
-    return create_engine(
-        url,
-        connect_args={"check_same_thread": False},
-        echo=False,
-    )
-
-
-def get_session_factory(engine=None):
-    """Return a session factory bound to the given engine or default."""
-    if engine is None:
-        engine = get_engine()
-    return sessionmaker(bind=engine, autocommit=False, autoflush=False)
+# Create engine
+if DATABASE_URL.startswith("sqlite"):
+    # SQLite specific settings
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False}, echo=True)
+else:
+    # For PostgreSQL or other databases
+    engine = create_engine(DATABASE_URL, echo=True)
 
 
-def create_all(engine=None):
-    """Create all tables (categories, questions)."""
-    if engine is None:
-        engine = get_engine()
-    Base.metadata.create_all(engine)
+def create_db_and_tables():
+    """Create all tables in the database."""
+    SQLModel.metadata.create_all(engine)
+
+
+def get_session():
+    """Dependency to get a database session."""
+    with Session(engine) as session:
+        yield session
+
+
+def get_engine(url=None):
+    """Return an engine for the given URL or default DATABASE_URL. Optional compatibility helper."""
+    u = url or DATABASE_URL
+    if u.startswith("sqlite"):
+        return create_engine(u, connect_args={"check_same_thread": False}, echo=True)
+    return create_engine(u, echo=True)

@@ -1,5 +1,6 @@
 """
-Workflow to load questions_categories.json into the SQLite vectordb (Categories + Questions).
+Workflow to load questions_categories.json into the SQLite vectordb (Questions with tags).
+Uses Option A for vector lookup: Chroma document ID is str(Question.id); get_category looks up by Question.id.
 """
 import json
 import os
@@ -14,8 +15,8 @@ if _root not in sys.path:
 from FlagEmbedding import BGEM3FlagModel
 
 from vectordb.chroma_db import QuestionVectorDB
-from vectordb.database import create_all, get_engine, get_session_factory
-from vectordb.models import Category, Question
+from vectordb.database import create_db_and_tables, engine, get_session
+from vectordb.models import Question
 
 # Default path to the JSON input file (next to this module)
 _DEFAULT_JSON_PATH = os.path.join(
@@ -33,9 +34,8 @@ class DBWorkflow:
         has_categories: bool = True,
     ) -> None:
         self.json_path = json_path or _DEFAULT_JSON_PATH
-        self.engine = get_engine(database_url)
-        self.Session = get_session_factory(self.engine)
-        create_all(self.engine)
+        self.engine = engine  # shared engine from vectordb.database (database_url ignored for now)
+        create_db_and_tables()
         self.vector_db = QuestionVectorDB(persist_directory=chroma_persist_dir)
         self.embedding_model = self.load_embedding()
         self.has_categories = has_categories
@@ -50,12 +50,23 @@ class DBWorkflow:
             return json.load(f)
 
     def get_category(self, question_id: str) -> str | None:
-        """Return the category name for the given question_id, or None if not found."""
-        with self.Session() as session:
-            question = session.query(Question).filter_by(question_id=question_id).first()
+        """Return the category/tag for the given question_id (str(Question.id) from Chroma; Option A), or None if not found."""
+        gen = get_session()
+        session = next(gen)
+        try:
+            try:
+                id_val = int(question_id)
+            except ValueError:
+                return None
+            question = session.get(Question, id_val)
             if question is None:
                 return None
-            return question.category.category_name
+            return question.tags or None
+        finally:
+            try:
+                next(gen)
+            except StopIteration:
+                pass
     def get_embedding(self, text: str) -> list[float]:
         """Convert string text into a vector embedding using the loaded model (call load_embedding first)."""
         if self.embedding_model is None:
@@ -113,61 +124,48 @@ class DBWorkflow:
         self.populate(data)
 
     def populate_sql(self, data: dict) -> list[dict]:
-        """Populate Category and Question tables from data. Returns the list of question dicts."""
+        """Populate Question table from data (category stored in Question.tags). Returns the list of question dicts with _question_id set."""
         all_questions: list[dict] = []
-        category_names: set[str] = set()
         for ingestion in data.get("ingestions", []):
             for q in ingestion.get("questions", []):
                 all_questions.append(q)
-                if q.get("category"):
-                    category_names.add(q["category"])
 
-        with self.Session() as session:
-            name_to_id: dict[str, int] = {}
-            for name in sorted(category_names):
-                cat = session.query(Category).filter_by(category_name=name).first()
-                if cat is None:
-                    cat = Category(category_name=name)
-                    session.add(cat)
-                    session.flush()
-                name_to_id[name] = cat.category_id
-
+        gen = get_session()
+        session = next(gen)
+        try:
             for q in all_questions:
-                category_name = q.get("category")
-                if not category_name or category_name not in name_to_id:
-                    continue
-                question_id = q["question_id"]
-                if session.query(Question).filter_by(question_id=question_id).first() is not None:
-                    continue
-                category_id = name_to_id[category_name]
-                session.add(
-                    Question(
-                        question_id=question_id,
-                        category_id=category_id,
-                        start_page=q.get("start_page"),
-                        page_nums=q.get("page_nums"),
-                        text=q.get("text"),
-                        text_hash=q.get("text_hash"),
-                        image_crops=q.get("image_crops"),
-                        type=q.get("type"),
-                        metadata_=q.get("metadata"),
-                    )
+                question = Question(
+                    text=q.get("text", ""),
+                    tags=q.get("category", ""),
+                    user_id="system",
+                    title="",
                 )
+                session.add(question)
+                session.flush()
+                q["_question_id"] = question.id
             session.commit()
+        finally:
+            try:
+                next(gen)
+            except StopIteration:
+                pass
 
         return all_questions
 
     def populate_chroma(self, all_questions: list[dict]) -> None:
-        """Add vector embeddings for each question to ChromaDB. Uses precomputed _embedding if present."""
+        """Add vector embeddings for each question to ChromaDB. Uses precomputed _embedding if present.
+        Chroma document ID is str(Question.id) (Option A) so get_category(id) can look up by Question.id."""
         for q in all_questions:
             text = q.get("text") or ""
             if not text and "_embedding" not in q:
                 continue
-            question_id = q["question_id"]
+            chroma_id = str(q["_question_id"]) if "_question_id" in q else q.get("question_id")
+            if chroma_id is None:
+                continue
             embedding = q.get("_embedding")
             if embedding is None:
                 embedding = self.get_embedding(text)
-            self.vector_db.add_embedding(question_id, embedding)
+            self.vector_db.add_embedding(chroma_id, embedding)
 
     def populate(self, data: dict) -> None:
         """Populate both SQL and ChromaDB from data."""

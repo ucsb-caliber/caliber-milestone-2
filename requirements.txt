@@ -47,6 +47,12 @@ FlagEmbedding>=1.2.0
 sqlalchemy>=2.0.0
 chromadb>=0.4.0
 
+# Same SQL stack as milestone-one (for vectordb SQL + Alembic)
+sqlmodel==0.0.14
+alembic==1.13.1
+python-dotenv==1.0.0
+psycopg2-binary==2.9.11
+
 # ---------------------------
 # Optional (only if actually used)
 # ---------------------------
