@@ -7,7 +7,7 @@ from pathlib import Path
 # config
 DB_PATH = Path("layout_debug/questions.json")
 OLLAMA_URL = "http://localhost:11434/api/chat"
-DEBUG = True  # set to True to see full logs
+DEBUG = False  # set to True to see full logs
 
 # --- helper functions ---
 def encode_image(path):
@@ -18,17 +18,18 @@ def encode_image(path):
 def call_ollama(prompt, model, images=None):
     if DEBUG:
         print(f"\n[DEBUG] Calling model: {model}")
-        print(f"[DEBUG] Prompt preview: {prompt}")
+        # print(f"[DEBUG] Prompt preview: {prompt}")
 
     payload = {
         "model": model,
         "messages": [{"role": "user", "content": prompt, "images": images or []}],
         "stream": False,
         "format": "json",
-        "options": {"temperature": 0.1, "num_ctx": 4096}
+        "options": {"temperature": 0.3, "num_ctx": 4096}
     }
     try:
-        response = requests.post(OLLAMA_URL, json=payload)
+        # added timeout to prevent hanging on vision models
+        response = requests.post(OLLAMA_URL, json=payload, timeout=60)
         response.raise_for_status()
         content = response.json()['message']['content']
 
@@ -36,32 +37,64 @@ def call_ollama(prompt, model, images=None):
             print(f"[DEBUG] Raw response: {content}")
 
         return json.loads(content)
+    except requests.exceptions.Timeout:
+        print(f"Error: Model {model} timed out. Skipping...")
+        return None
     except Exception as e:
         print(f"api error: {e}")
         return None
 
+def should_skip_question(text):
+    """
+    Detects if this is a policy agreement, header, or junk text.
+    """
+    t = text.lower()
+    junk_triggers = [
+        "honor code", "academic integrity", "policies", 
+        "adhere to", "judicial board", "leaving this question blank",
+        "docstrings", "merely examples", "by selecting", "agree that"
+    ]
+    if any(trigger in t for trigger in junk_triggers):
+        return True
+    return False
+
 def should_use_vision(q_data):
     text = q_data.get("text", "")
     images = q_data.get("image_crops", [])
+    
+    # No image file? -> Text Mode
     if not images:
-        if DEBUG: print("[DEBUG] Routing: no images found -> text mode")
+        if DEBUG:
+            print("[DEBUG] Routing: no images found -> text mode")
         return False
     
-    vision_keywords = ["shown", "diagram", "figure", "graph", "tree", "circuit", "table"]
+    # Visual Keywords? -> Vision Mode
+    vision_keywords = ["shown", "diagram", "figure", "graph", "tree", "circuit", "table", "plot", "chart"]
     for k in vision_keywords:
         if k in text.lower():
-            if DEBUG: print(f"[DEBUG] Routing: found visual keyword '{k}' -> vision mode")
+            if DEBUG:
+                print(f"[DEBUG] Routing: found visual keyword '{k}' -> vision mode")
             return True
     
-    # text heuristics
+    # Structure Checks (MCQ / TrueFalse) -> Text Mode
     has_mcq = re.search(r"(\b[A-E1-5][\.\)]\s)|(\([a-e]\))", text)
     is_tf = "true" in text.lower() and "false" in text.lower()
     
-    if (has_mcq or is_tf) and len(text) > 40:
-        if DEBUG: print("[DEBUG] Routing: detected text-only mcq/tf pattern -> text mode")
+    if (has_mcq or is_tf) and len(text) > 30:
+        if DEBUG:
+            print("[DEBUG] Routing: detected text-only mcq/tf pattern -> text mode")
+        return False
+
+    # if we have a decent amount of text (>60 chars) and no visual keywords,
+    # it's likely just a screenshot of text. Trust the text model
+    if len(text) > 60:
+        if DEBUG:
+            print("[DEBUG] Routing: text length > 60 chars -> text mode")
         return False
     
-    if DEBUG: print("[DEBUG] Routing: default fallback -> vision mode")
+    # fallback to vision mode
+    if DEBUG:
+        print("[DEBUG] Routing: default fallback -> vision mode")
     return True
 
 def detect_format(text):
@@ -83,15 +116,17 @@ def detect_format(text):
 def judge_equivalence(intended, solved):
     prompt = f"""
     You are a lenient Computer Science TA grading a student's answer.
-    Key (Correct Answer): "{intended}"
-    Student Response:     "{solved}"
     
-    TASK: Determine if the Student Response is correct based on the Key.
+    Key (Correct Logic): "{intended}"
+    Student Code/Answer: "{solved}"
+    
+    TASK: Determine if the Student's logic produces the correct result.
     
     GRADING RULES:
-    1. If the student includes the core concept from the Key, MARK IT TRUE.
-    2. If the student adds extra correct details, MARK IT TRUE.
-    3. Only mark FALSE if the student contradicts the key.
+    1. IGNORE syntax differences (e.g., 'for loop' vs 'sum()' function are EQUAL).
+    2. IGNORE variable names (e.g., 'total' vs 'sum' are EQUAL).
+    3. If the logic solves the problem described in the Key, MARK IT TRUE.
+    4. Only mark FALSE if the logic is fundamentally wrong.
     
     Return JSON: {{ "match": true, "reason": "..." }}
     """
@@ -114,7 +149,12 @@ def run_pipeline(index):
     with open(DB_PATH, "r") as f: db = json.load(f)
     q = db["ingestions"][-1]["questions"][index]
     
-    print(f"\n--- Starting pipeline for question {index} ---")
+    print(f"\n--- Starting pipeline for question index {index} ---")
+
+    # skip check
+    if should_skip_question(q['text']):
+        print("Skipping: Detected as non-question (policy/instructions).")
+        return None
     
     # routing
     use_vision = should_use_vision(q)
@@ -123,16 +163,20 @@ def run_pipeline(index):
     
     # format detection
     forced_type = detect_format(q['text'])
-    print(f"[DEBUG] Detected format: {forced_type}")
+    print(f"[DEBUG] Detected format: {forced_type} | Model: {gen_model}")
 
     # generation
     gen_prompt = f"""
-    Create a variant of this CS question.
+    Create a LOGICAL VARIANT of this CS question.
     Original: {q['text']}
     
     INSTRUCTIONS:
-    1. You MUST generate a "{forced_type}" question.
-    2. Do NOT change the format.
+    1. KEEP the same concept and difficulty.
+    2. CHANGE the specific values, variable names, or scenario.
+       (e.g., if original uses range [20,29], change it to [40,49] or [10,19]).
+       (e.g., if original asks for 'sum', ask for 'product' or 'count').
+    3. You MUST generate a "{forced_type}" question.
+    4. Ensure the 'correct_answer' is a COMPLETE sentence or valid code (do not truncate).
     
     FORMAT RULES:
     - If MCQ: Provide "options" {{ "A": "...", "B": "...", ... }}.
@@ -142,7 +186,7 @@ def run_pipeline(index):
     OUTPUT JSON:
     {{
         "type": "{forced_type}",
-        "variant_text": "The question text...",
+        "variant_text": "The modified question text...",
         "options": {{...}} or null,
         "correct_answer": "..."
     }}
@@ -163,7 +207,7 @@ def run_pipeline(index):
     INSTRUCTIONS:
     - If MCQ: Return the Label (A, B, C, D, E).
     - If True/False: Return 'True' or 'False'.
-    - If Free Response: Provide a clear, accurate explanation. Include key details.
+    - If Free Response: Write the code or explanation clearly.
     
     OUTPUT JSON:
     {{
