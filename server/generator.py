@@ -17,8 +17,8 @@ def encode_image(path):
 
 def call_ollama(prompt, model, images=None):
     if DEBUG:
-        print(f"\n[DEBUG] calling model: {model}")
-        print(f"[DEBUG] prompt preview: {prompt}")
+        print(f"\n[DEBUG] Calling model: {model}")
+        print(f"[DEBUG] Prompt preview: {prompt}")
 
     payload = {
         "model": model,
@@ -31,10 +31,10 @@ def call_ollama(prompt, model, images=None):
         response = requests.post(OLLAMA_URL, json=payload)
         response.raise_for_status()
         content = response.json()['message']['content']
-        
+
         if DEBUG:
-            print(f"[DEBUG] raw response: {content}")
-            
+            print(f"[DEBUG] Raw response: {content}")
+
         return json.loads(content)
     except Exception as e:
         print(f"api error: {e}")
@@ -43,16 +43,14 @@ def call_ollama(prompt, model, images=None):
 def should_use_vision(q_data):
     text = q_data.get("text", "")
     images = q_data.get("image_crops", [])
-    
     if not images:
-        if DEBUG: print("[DEBUG] routing: no images found -> text mode")
+        if DEBUG: print("[DEBUG] Routing: no images found -> text mode")
         return False
     
-    # vision keywords
     vision_keywords = ["shown", "diagram", "figure", "graph", "tree", "circuit", "table"]
     for k in vision_keywords:
         if k in text.lower():
-            if DEBUG: print(f"[DEBUG] routing: found visual keyword '{k}' -> vision mode")
+            if DEBUG: print(f"[DEBUG] Routing: found visual keyword '{k}' -> vision mode")
             return True
     
     # text heuristics
@@ -60,16 +58,31 @@ def should_use_vision(q_data):
     is_tf = "true" in text.lower() and "false" in text.lower()
     
     if (has_mcq or is_tf) and len(text) > 40:
-        if DEBUG: print("[DEBUG] routing: detected text-only mcq/tf pattern -> text mode")
+        if DEBUG: print("[DEBUG] Routing: detected text-only mcq/tf pattern -> text mode")
         return False
     
-    if DEBUG: print("[DEBUG] routing: default fallback -> vision mode")
+    if DEBUG: print("[DEBUG] Routing: default fallback -> vision mode")
     return True
+
+def detect_format(text):
+    text_lower = text.lower()
+    
+    # check for true/false pattern
+    if "true" in text_lower and "false" in text_lower:
+        if len(text) < 200 or "select" in text_lower:
+            return "TRUE_FALSE"
+
+    # check for mcq pattern (A. B. C. or 1. 2. 3.)
+    # looks for A. or (a) at start of lines or sentences
+    has_mcq = re.search(r"(?:^|\n|\s)(?:[A-E]|[1-5])[\.\)]\s+\w+", text)
+    if has_mcq:
+        return "MCQ"
+        
+    return "FREE_RESPONSE"
 
 def judge_equivalence(intended, solved):
     prompt = f"""
     You are a lenient Computer Science TA grading a student's answer.
-    
     Key (Correct Answer): "{intended}"
     Student Response:     "{solved}"
     
@@ -77,9 +90,8 @@ def judge_equivalence(intended, solved):
     
     GRADING RULES:
     1. If the student includes the core concept from the Key, MARK IT TRUE.
-    2. If the student adds extra correct details or context, MARK IT TRUE.
-    3. If the student is much more detailed than the key but correct, MARK IT TRUE.
-    4. Only mark FALSE if the student contradicts the key or is factually wrong.
+    2. If the student adds extra correct details, MARK IT TRUE.
+    3. Only mark FALSE if the student contradicts the key.
     
     Return JSON: {{ "match": true, "reason": "..." }}
     """
@@ -96,18 +108,22 @@ def normalize_answer(ans):
     mapping = {'1':'A', '2':'B', '3':'C', '4':'D', '5':'E'}
     return mapping.get(val, val)
 
-# --- main pipline ---
+# --- main pipeline ---
 def run_pipeline(index):
     if not DB_PATH.exists(): return
     with open(DB_PATH, "r") as f: db = json.load(f)
     q = db["ingestions"][-1]["questions"][index]
     
-    print(f"\n--- starting pipeline for question {index} ---")
+    print(f"\n--- Starting pipeline for question {index} ---")
     
     # routing
     use_vision = should_use_vision(q)
     gen_model = "llama3.2-vision" if use_vision else "llama3.2"
     images = [encode_image(q["image_crops"][0])] if (use_vision and q.get("image_crops")) else []
+    
+    # format detection
+    forced_type = detect_format(q['text'])
+    print(f"[DEBUG] Detected format: {forced_type}")
 
     # generation
     gen_prompt = f"""
@@ -115,20 +131,20 @@ def run_pipeline(index):
     Original: {q['text']}
     
     INSTRUCTIONS:
-    1. Identify the format: MCQ, TRUE_FALSE, or FREE_RESPONSE.
-    2. Generate a variant using the SAME format.
+    1. You MUST generate a "{forced_type}" question.
+    2. Do NOT change the format.
     
     FORMAT RULES:
     - If MCQ: Provide "options" {{ "A": "...", "B": "...", ... }}.
-    - If TRUE_FALSE: Set "options" to null. The answer MUST be "True" or "False".
-    - If FREE_RESPONSE: Set "options" to null.
+    - If TRUE_FALSE: Set "options" to null. Answer is "True" or "False".
+    - If FREE_RESPONSE: Set "options" to null. Answer is a string.
     
     OUTPUT JSON:
     {{
-        "type": "MCQ" or "TRUE_FALSE" or "FREE_RESPONSE",
+        "type": "{forced_type}",
         "variant_text": "The question text...",
         "options": {{...}} or null,
-        "correct_answer": "The label (A), boolean (True/False), or code string"
+        "correct_answer": "..."
     }}
     """
     
@@ -136,9 +152,7 @@ def run_pipeline(index):
     if not variant: return
 
     if DEBUG:
-        print(f"[DEBUG] full generated object:\n{json.dumps(variant, indent=2)}")
-
-    q_type = variant.get("type", "FREE_RESPONSE")
+        print(f"[DEBUG] Generated variant text: {variant.get('variant_text')}")
 
     # verification
     verify_prompt = f"""
@@ -149,21 +163,22 @@ def run_pipeline(index):
     INSTRUCTIONS:
     - If MCQ: Return the Label (A, B, C, D, E).
     - If True/False: Return 'True' or 'False'.
-    - If Free Response: Return a CONCISE 1-2 sentence answer. Do not lecture.
+    - If Free Response: Provide a clear, accurate explanation. Include key details.
     
     OUTPUT JSON:
     {{
-        "reasoning": "Step-by-step logic...",
+        "reasoning": "Brief logic...",
         "final_answer": "..."
     }}
     """
     
     solution = call_ollama(verify_prompt, "llama3.2")
     if not solution: return
-    
+
+    # judgment
     if DEBUG:
-        print(f"[DEBUG] solver reasoning: {solution.get('reasoning')}")
-        print(f"[DEBUG] solver raw answer: {solution.get('final_answer')}")
+        print(f"[DEBUG] Solver reasoning: {solution.get('reasoning')}")
+        print(f"[DEBUG] Solver raw answer: {solution.get('final_answer')}")
 
     # logic check
     gen_ans = str(variant.get('correct_answer')).strip()
@@ -171,35 +186,42 @@ def run_pipeline(index):
     
     verified = False
     
-    if q_type in ["MCQ", "TRUE_FALSE"]:
+    if forced_type in ["MCQ", "TRUE_FALSE"]:
         g_val = normalize_answer(gen_ans)
         s_val = normalize_answer(sol_ans)
         
         if DEBUG:
-            print(f"[DEBUG] normalized comparison: generator='{g_val}' vs solver='{s_val}'")
-        
+            print(f"[DEBUG] Normalized comparison: generator='{g_val}' vs solver='{s_val}'")
+
         if g_val == s_val:
             verified = True
         else:
-            print(f"mismatch: {g_val} vs {s_val}")
+            print(f"Mismatch: {g_val} vs {s_val}")
             
     else:
-        print("judging answer equivalence")
+        print("Judging answer equivalence")
         judgment = judge_equivalence(gen_ans, sol_ans)
         if DEBUG:
-            print(f"[DEBUG] judge result: {judgment}")
-            
+            print(f"[DEBUG] Judge result: {judgment}")
+
         if judgment and judgment.get('match'):
             verified = True
         else:
-            print(f"judgment failed: {judgment.get('reason')}")
+            print(f"Judgment failed: {judgment.get('reason')}")
 
+    # result
     if verified:
-        print("success: variant verified")
-        return variant
+        print("Success: variant verified")
+        return {
+            "original_id": q.get("question_id"),
+            "type": forced_type,
+            "question": variant['variant_text'],
+            "options": variant.get('options'),
+            "answer": gen_ans
+        }
     else:
-        print("failed verification")
+        print("Failed verification")
         return None
 
 if __name__ == "__main__":
-    run_pipeline(5)
+    run_pipeline(3)
