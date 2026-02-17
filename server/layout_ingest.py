@@ -46,6 +46,9 @@ CROP_PADDING = 10     # pixels of padding around bbox
 
 QUESTIONS_DB_FILENAME = "questions.json"  # stored inside OUTPUT_DIR
 
+# Run Bloom's Taxonomy classification on each question during ingest (requires transformers/torch)
+ENABLE_BLOOM_CLASSIFICATION = True
+
 DEBUG = True
 DEBUG_DRAW_LAYOUT = False   # <-- IMPORTANT: avoids Pillow10 layoutparser crash
 
@@ -171,6 +174,27 @@ def load_questions_db(db_path: Path) -> Dict[str, Any]:
 
 def is_question_start(block: Block) -> bool:
     return bool(QUESTION_START_RE.match(block.text.strip()))
+
+
+# ===================== BLOOM'S TAXONOMY =====================
+
+def run_bloom_on_questions(questions: List[Question]) -> None:
+    """Run Bloom classifier on each question and set q.metadata with bloom_level, bloom_confidence, bloom_reasoning."""
+    if not questions:
+        return
+    try:
+        from server import bloom_classifier
+    except ImportError:
+        import sys
+        _server_dir = Path(__file__).resolve().parent
+        if str(_server_dir) not in sys.path:
+            sys.path.insert(0, str(_server_dir))
+        import bloom_classifier  # type: ignore[assignment]
+    for q in questions:
+        result = bloom_classifier.classify(q.text)
+        q.metadata["bloom_level"] = result.get("bloom_level")
+        q.metadata["bloom_confidence"] = result.get("bloom_confidence")
+        q.metadata["bloom_reasoning"] = result.get("bloom_reasoning")
 
 
 # -------------------- Debug drawing wrapper --------------------
@@ -401,6 +425,9 @@ def append_ingestion_to_db(
                 "image_crops": q.image_crops,
                 "type": q.qtype,
                 "metadata": q.metadata,
+                "bloom_level": q.metadata.get("bloom_level"),
+                "bloom_confidence": q.metadata.get("bloom_confidence"),
+                "bloom_reasoning": q.metadata.get("bloom_reasoning"),
             }
             for q in questions
         ],
@@ -546,6 +573,11 @@ def main():
         q.question_id = make_question_id(exam_id=exam_id, ingestion_id=ingestion_id, question_index=i)
         q.qtype = None
         q.metadata = {}
+
+    if ENABLE_BLOOM_CLASSIFICATION:
+        print("Running Bloom's Taxonomy classification...")
+        run_bloom_on_questions(questions)
+        print("Bloom classification done.")
 
     print(f"\nDetected {len(questions)} questions")
     print(f"exam_id={exam_id}")

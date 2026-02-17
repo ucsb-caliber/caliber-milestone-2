@@ -41,6 +41,12 @@ yacs==0.1.8
 openai==2.15.0
 
 # ---------------------------
+# Bloom's taxonomy (Hugging Face Bloominzer)
+# ---------------------------
+transformers>=4.36.0
+torch>=2.0.0
+
+# ---------------------------
 # Optional (only if actually used)
 # ---------------------------
 pandas==2.2.2
