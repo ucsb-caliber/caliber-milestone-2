@@ -6,8 +6,11 @@ This repository contains a Python pipeline to:
 1. Parse a PDF exam into structured **question text** using layout detection + OCR  
 2. Save question metadata and optional image crops to a JSON database  
 3. (Optional) Embed extracted questions downstream  
+4. **Bloom's Taxonomy** classification on each question (level, confidence, reasoning) during ingest or via API  
 
 The pipeline can be run **locally** or **via Docker (recommended for consistency)**.
+
+**Testing Bloom:** see [docs/BLOOM_TESTING.md](docs/BLOOM_TESTING.md).
 
 ---
 
