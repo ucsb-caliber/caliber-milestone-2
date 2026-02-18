@@ -1,0 +1,297 @@
+{
+    "schema_version": "1.0",
+    "ingestions": [
+      {
+        "ingestion_id": "ing_a19eb6d72e43f129",
+        "created_at": "2026-01-21T00:20:05.330487Z",
+        "source_pdf": "exam_tests/practicefinal2.pdf",
+        "exam_id": "practicefinal2",
+        "questions": [
+          {
+            "question_id": "q_213ed0f990f1db7f",
+            "category": "Data structures",
+            "start_page": 3,
+            "page_nums": [
+              3
+            ],
+            "text": "Problem 2\nn a Dinary search tree, 4, In-order traversal will visit the nodes In increasing-key order, thus\nyroviding a linear-time mechanism for extracting all keys in order.\nran | ro | rr J f 4 y+ (oF - FL zy 3 yy yey a , 7 IaiOW\nSuppose that you have some range of keys, say kl < k < k2, and you'd like to extract all k\n1 T that lie within this range, and you'd like to get the results, as before, in increasing-key ord\nNote that neither k1 nor k2 needs to actually be a key in the BST, and that the returned list\neys might well be empty!) Once again, inorder traversal with a test for in-range-ness will solve |\nroblem in worst case O(n) time, where n is the number of keys in the tree. You are to descr\now to solve the problem in time O(h + s), where h is the height of the tree 7’, and s is the numl\nf kevs returned.\ne Give a brief description of your approach to this proble\ne Write pseudocode for your algorithm.\ne Explain briefly why your algorithm is O(h + s).",
+            "text_hash": "bb59a106dffc5bf0",
+            "image_crops": [
+              "layout_debug/crops/practicefinal2/ing_a19eb6d72e43f129/q_213ed0f990f1db7f_p003.png"
+            ],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_0dfea87a829d84bd",
+            "category": "Algorithm analysis",
+            "start_page": 4,
+            "page_nums": [
+              4
+            ],
+            "text": "Problem 3\ny now you should know how to construct a minimum spanning tree from a graph. However,\nmetimes we don’t want a minimum spanning tree — perhaps we want to force our spanning tree\ncontain specific edges, regardless of whether or not those edges are optimal.\nsuppose you are given an undirected graph G = (V,/) with edge weights w,, and an acyche\nf edges F’, where F is a subset of E. (You may assume the edges are decorated such that “inF(\nill return either true if e is one of the edges in F’, or false otherwise.) Develop an algorithm tl\nins in O(|E|log|£|) and returns the lightest spanning tree T such that the edges of F’ are\nyntained in 7’.",
+            "text_hash": "0afa716f8567d3d7",
+            "image_crops": [
+              "layout_debug/crops/practicefinal2/ing_a19eb6d72e43f129/q_0dfea87a829d84bd_p004.png"
+            ],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_df4f34e6740681f8",
+            "category": "Algorithm analysis",
+            "start_page": 5,
+            "page_nums": [
+              5
+            ],
+            "text": "Problem 4\nYonsider the problem of finding the length of the longest path from a vertex s to a vertex ¢ in a\nlirected acyclic graph G = (V, E) with edge-weights we.\nVw PEEK £2 LINKS Lildabl LI YyY Call sUIvVe bills PILUUICIT Uollls all ALLOLOU LAL Kollad © FLIBUILUIIII Ulte\nstores the maximum cost of each node and uses a maximum cost priority queue (a priorit\nqueue that returns the maximum value instead of the minimum value). Why would this n\nwork?\n\ne Describe and write pseudocode for an algorithm that would work. If there exists no pat\nbetween s and t, then return oo.",
+            "text_hash": "35c6b5b1a9993de8",
+            "image_crops": [
+              "layout_debug/crops/practicefinal2/ing_a19eb6d72e43f129/q_df4f34e6740681f8_p005.png"
+            ],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_bfd7c481dc24610b",
+            "category": "Algorithm analysis",
+            "start_page": 6,
+            "page_nums": [
+              6
+            ],
+            "text": "Problem 5\nonsider the following two algorithms, each of which takes an input graph, G = (V, E) with edge\nengths Iu, v).\nAlgorithm A: This algorithm picks a random node s, runs Dijsktras algorithm on it to find dis-\n‘ances from s to all nodes, and retains the |V|/2 nodes that are closest to s [in the case of a tie, it\nchooses randomly.]. It then recursively calls itself on the graph consisting of these nearby nodes and\nill edges in E that join such nearby nodes. For a graph with a single vertex, the algorithm returns\nchat node. This particular implementation of Dijkstra uses an array to represent the priority queue.\nVigorithm b: Lhe second algorithm sorts the edges by lengtn, and returns the length of the median\ndge.\nWhat are the runtimes of each algorithm? For what kinds of graphs would Algorithm A be faster?\nA lonrnithm RR? Rriocfix, eavnlain wonur ancwoare",
+            "text_hash": "74d1459adbbee185",
+            "image_crops": [
+              "layout_debug/crops/practicefinal2/ing_a19eb6d72e43f129/q_bfd7c481dc24610b_p006.png"
+            ],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_ba87a62062b3a184",
+            "category": "Algorithm analysis",
+            "start_page": 7,
+            "page_nums": [
+              7
+            ],
+            "text": "Problem 6\nriven an input string and a dictionary of words, develop an efficient algorithm to determine if tl\niput string can be segmented into a space-separated sequence of dictionary words. There is no lim\n9 the number of times you may use each word in the dictionary.\nFor example, suppose we have the following dictionary of known words:\ndictionary = {\"i\", \"like\", \"ice\", \"cream\", \"icecream\", \"popsicle\"}\nConsider the following input/output pairs.\nInput: \"ilike\"\nOutput: True\nWe can segment the string into \"i like\" using words from the dictionary.\nInput: \"ilikeicecream\"\nOutput: True\nWe can represent the string as either \"i like icecream\" or \"i like ice cream.\"\nInput: \"ieatpopsicles\"\nOutput: False\nWe can’t segment the string into words contained in our dictionary.\nNote that a greedy approach will not always guarantee the correct solution! For example, conside\nthe following test case:\ndictionary = {\"a\", \"an\", \"ill\", \"pill\", \"pillow\", \"case\"}\nInput: \"pillowcase\"\nOutput: True\nWe can segment the string into \"pillow case.\"\nTh thie paca tLuam teal tn Sn tha Brot matphinea neofiy werd) wab “at awawar that mabkn.\nFor example, suppose we have the following dictionary of known words:\ndictionary = {\"i\", \"like\", \"ice\", \"cream\", \"icecream\", \"popsicle\"}\nConsider the following input/output pairs.\nInput: \"ilike\"\nOutput: True\nWe can segment the string into \"i like\" using words from the dictionary.\nInput: \"ilikeicecream\"\nOutput: True\nWe can represent the string as either \"i like icecream\" or \"i like ice cream.\"\nInput: \"ieatpopsicles\"\nOutput: False\nWe can’t segment the string into words contained in our dictionary.\nNote that a greedy approach will not always guarantee the correct solution! For example, conside\nthe following test case:\ndictionary = {\"a\", \"an\", \"ill\", \"pill\", \"pillow\", \"case\"}\nInput: \"pillowcase\"\nOutput: True\nWe can segment the string into \"pillow case.\"\nTh thie paca tLuam teal tn Sn tha Brot matphinea neofiy werd) wab “at awawar that mabkn.\nn this case, if we tried to find the first matching prefix, we would pick “pill.” However, that\nhe rest of the string (“owcase”) unsegmentable given our dictionary.",
+            "text_hash": "0e145e15ce034e95",
+            "image_crops": [
+              "layout_debug/crops/practicefinal2/ing_a19eb6d72e43f129/q_ba87a62062b3a184_p007.png"
+            ],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_312e03b15a739b84",
+            "category": "Data structures",
+            "start_page": 9,
+            "page_nums": [
+              9,
+              10
+            ],
+            "text": "Problem 8\nYou are given a non-empty stack S of integers. Write pseudocode for a method that sorts the stac\nn ascending order from the bottom-up (i.e. the bottom element is the smallest integer). You ar\nwllowed to use the push() , pop(), peek(), isEmpty() methods of a stack. You may use another stac\nn order to solve this problem, but you may not use other data structures in your solution.\n\nTint : You can accomplish this by creating one more stack in your method, and transfer element\nnto the new stack each time checking that the transfer doesn’t violate the sort order.\n\nHxcample : Here’s a stack S\n1. What is the purpose of the learning rate 7?\n2. Name two defining aspects of the functional paradigm and describe them in a few senten\n3. Are there graphs where Dijkstra’s will fail? If so, explain why. If not, explain why not.\n4. Describe one difference between problems in the sets P and NP.\n5. What is the difference between online algorithms and offline algorithms? Give an examp!|\na time that we have used each in class.",
+            "text_hash": "30bbeb46c7bf2dbc",
+            "image_crops": [
+              "layout_debug/crops/practicefinal2/ing_a19eb6d72e43f129/q_312e03b15a739b84_p009.png",
+              "layout_debug/crops/practicefinal2/ing_a19eb6d72e43f129/q_312e03b15a739b84_p010.png"
+            ],
+            "type": null,
+            "metadata": {}
+          }
+        ]
+      },
+      {
+        "ingestion_id": "ing_a9676ce2a97e1da5",
+        "created_at": "2026-01-21T00:21:29.191311Z",
+        "source_pdf": "exam_tests/practicefinal3.pdf",
+        "exam_id": "practicefinal3",
+        "questions": [
+          {
+            "question_id": "q_8f918a91c2585522",
+            "category": "Programming logic",
+            "start_page": 1,
+            "page_nums": [
+              1,
+              2
+            ],
+            "text": "Question 1]\n3y selecting \"True\", you agree that you understand and will adhere to the Bowdoin\n\\cademic Honor code and the CSCI 1101 policies. Failure to adhere to these rules may\nesult in a Judicial Board hearing.\nBy selecting \"False\" or leaving this question blank, you forfeit the opportunity to complete the\nxam.\nlote that the programming solutions below do not have docstrings, and many of the\nallowing are merely examples of possible answers. You may have found an alternative\nolution that works just as well.\nume at least three different sequences. How do they differ?",
+            "text_hash": "7dfb221cecc560cb",
+            "image_crops": [
+              "layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_8f918a91c2585522_p001.png",
+              "layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_8f918a91c2585522_p002.png"
+            ],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_004a8f339d0de837",
+            "category": "Programming logic",
+            "start_page": 2,
+            "page_nums": [
+              2
+            ],
+            "text": "Question 5\nAgain, there are a number of reasons - most significantly, this can impact perfo:\nlance.",
+            "text_hash": "a1d94097393047a4",
+            "image_crops": [
+              "layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_004a8f339d0de837_p002.png"
+            ],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_098f2a48e9185bc9",
+            "category": "Programming logic",
+            "start_page": 2,
+            "page_nums": [
+              2
+            ],
+            "text": "Question 6\nThat is the difference between a for-each and a while loop?\nresponses vary, but there are generally dlflerences 1n terms of overall setup ant\nhen to use each (a while loop can be used if we don’t know when it will stop)\nonsider what variables need to be specified in each case and where.",
+            "text_hash": "bf0b8bf392354b6a",
+            "image_crops": [
+              "layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_098f2a48e9185bc9_p002.png"
+            ],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_95fb4ea6d05d7f24",
+            "category": "Programming logic",
+            "start_page": 2,
+            "page_nums": [
+              2
+            ],
+            "text": "Question 7\nVrite a function near_and_far() that accepts three ints a, b, and c as arguments. Return True\none of b or c is \"close\" (differing from a by at most\n1), while the other is \"far\", differing from\noth other values by 2 or more.",
+            "text_hash": "6cb4c243bcee51e0",
+            "image_crops": [
+              "layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_95fb4ea6d05d7f24_p002.png"
+            ],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_3faba9c477321e4f",
+            "category": "Programming logic",
+            "start_page": 3,
+            "page_nums": [
+              3
+            ],
+            "text": "Question 8\nNrite a function sum_without_twenties(a, b, c) that returns the sum of three int arguments\n1, b, and c. However, do not include any int as part of the sum if it is within the range [20, 29]\ninclusive).",
+            "text_hash": "d3a3be437f5416b7",
+            "image_crops": [
+              "layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_3faba9c477321e4f_p003.png"
+            ],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_608959fc539562e7",
+            "category": "Programming logic",
+            "start_page": 3,
+            "page_nums": [
+              3
+            ],
+            "text": "Question 9\nVrite a runction get_substring_positions() tnat accepts two strings as arguments. heturn the\number of the positions where they contain the same substring of length\n2. For example, \"docatzz\"\nnd \"dobatz\" should yield 3, since the \"do\", \"at\", and \"tz\" substrings appear in the same place\n1 both strings.\nt SSL SbVobl ME _pVyos bsynoia, vV/.\nmin_length = min(len(a), len(b\ncount = 0\nfor i in range(min_length-\n1):\n\nif ali:i+2] == b[i:i+2]:\ncount += 1\nrerwirTrn comint",
+            "text_hash": "a39f07d84af31a1b",
+            "image_crops": [
+              "layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_608959fc539562e7_p003.png"
+            ],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_4c9d5c7fb0c922d8",
+            "category": "Data structures",
+            "start_page": 3,
+            "page_nums": [
+              3
+            ],
+            "text": "Question 10\nVrite a function debug() that takes in two sets, and makes a new set that contains the elements\noth sets have in common. If \"bug\" is one of the elements, remove that from the new set. Return\nhe new set.",
+            "text_hash": "ff57dbb75a70fe15",
+            "image_crops": [
+              "layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_4c9d5c7fb0c922d8_p003.png"
+            ],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_ca269491c5bba187",
+            "category": "Object oriented programming",
+            "start_page": 4,
+            "page_nums": [
+              4
+            ],
+            "text": "Question 11\nyrite a class named Book that represents each DOOK in a brary. Bach book has the following\n‘tributes:\ne title: the title of the book.\ne author: the author of the book.\ne content: a string representing the text of the book. Each page is separated by the ‘\\n’\ncharacter.\nThe Book class should have an initializer that accepts the book’s title, author, and content\ns arguments. These values should be assigned to the object’s respective attributes.\nThe class should also have the following methods:\ne read(): takes in a page number, and prints out the content of each page starting from the\nbeginning until the given page number is reached.\ne __str__() : return a string describing this book in terms of its name and author (e.g.,\n\"Adventures of Huckleberry Finn by Mark Twain\").\nlass Book:\ndef __init__(self, title, author, content):\nself.title = title\nself.author = author\nself.content = content\ndef read(self, page):\npages = self.content.split(\"\\n\")\nfor i in range(0, page-\n1):\nprint (pages [i] )\ndef __str__(self):\nreturn self.title + \" by \" + self.author\nOn the exam, you will have example test cases. These questions were meant to g\nyou thinking about what those test cases would be (to help prepare you for hidd\ntests, and for general practice with computational thinking). You could have includ\nmore error-checking here (for example, checking whether the page number is vali\nbut this is an acceptable solution.",
+            "text_hash": "38d4b363e9ce7485",
+            "image_crops": [
+              "layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_ca269491c5bba187_p004.png"
+            ],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_af89b67fa69c83c0",
+            "category": "Object oriented programming",
+            "start_page": 5,
+            "page_nums": [
+              5
+            ],
+            "text": "Question 12\ne name: the name of the employee.\n\ne favorites: a set of this employee’s favorite Books (or ComicBooks).\n\ne num_coffees: an integer representing how many coffees this employee has had today. TI\nvalue should begin at zero when a LibraryEmployee is initialized.\nPoll eh VA 8 Vit 24200228 87h VS petted Geet’ A we\n\ne favorites: a set of this employee’s favorite Books (or ComicBooks).\n\ne num_coffees: an integer representing how many coffees this employee has had toc\nvalue should begin at zero when a LibraryEmployee is initialized.\nine Lidraryrmployee Class shoulda Nave all MWiltlalizer that accepts the employees name ana\nvorites as arguments. These values should be assigned to the object’s respective attributes.\n4AUMULUIVITALLY, LLIN btwlal Jpetpivyss L1adSsSs SLILVUULE LIGVO ULI AUTO W LIS LALIT ULLIVULDS.\n\ne drink_coffee(): takes in an integer nun, and increases this LibraryEmployee’s num_coffe\nattribute by that integer.\n\ne shush_hooligans(): takes in an integer num_hooligans, and prints out “Shhh!” that maz\ntimes. Also, drinks a coffee for each hooligan shushed.\n\ne __str__() : return the LibraryEmployee’s name.",
+            "text_hash": "8ea1278414011771",
+            "image_crops": [
+              "layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_af89b67fa69c83c0_p005.png"
+            ],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_e089549d87bd07fa",
+            "category": "Object oriented programming",
+            "start_page": 6,
+            "page_nums": [
+              6,
+              7
+            ],
+            "text": "Question 14\n‘ite a class named Library. A library has the Io\nte a class named Library. A library has the following attributes:\n\n» name: the name of this library.\n\n» employees: a list of LibraryEmployees that work at the library.\n\n» books: a dictionary that contains Books as keys. The value pairec\nempty string, or a string representing the name of a person who |\nIhe Library class should have an initializer that MLAY accept employees and books as arg\nents, but doesn’t have to do so. If provided, these values should be assigned to the object\nspective attributes. If not provided, employees and books should begin as an empty list an\nctionary, respectively. The value for the name attribute is always provided.\nThe class should also have the following methods:\n\ne hire_employee(): takes in a new LibraryEmployee, and adds it to this library’s list of\nemployees.\n\ne add_book(): takes in a new Book, and adds it to this library’s books (unless the library\nalready has this book). If the library already has the book, print out the name of the library\nfollowed by “ already has this book!”.\n\ne check_out_book(): takes in a Book and a person’s name. If this book is in the dictionary of\nbooks, change the value at that key in the books dictionary to the person’s name. Otherwise,\nprint out “Sorry, we don’t have ” followed by the name of the book and a period.\n\ne return_book(): takes in a Book. If this book is in the dictionary of books, change the value\nat that key in the books dictionary to an empty string. Otherwise, print out “Sorry, wrong\nlibrary.”.\n\ne __str__(Q : return the name of the library.\n\nclass Library:\ndef __init__(self, name, employees=[], books={}):\nself.name = name\nself.employees = employees\nself.books = books\ndef hire_employee(self, employee):\nself .employees. append (employee)\ndef add_book(self, book):\nif book in self.books:\nprint (self.name + \" already has this book!\")\nelse:\nself .books[book] = \"\"\ndef check_out_book(self, book, person):\nif book in self.books:\nself .books[book] = person\nelse:\nprint(\"Sorry, we don't have \" + book.title + \".\")\ndef return_book(self, book):\nif book in self.books:\nself .books[book] = \"\"\nelse:\nprint(\"Sorry, wrong library.\")\ndef __str__(self):\nreturn self .name\nQuestion LE\nonsider the sequence\n2. 3, 6, 18, 108, 1944,\n2\n0\n9\n9\n5\n2...\nWrite a recurslve function next_num(n) that calculates the nth number of the sequence.",
+            "text_hash": "a132a1bcfa543b5f",
+            "image_crops": [
+              "layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_e089549d87bd07fa_p006.png",
+              "layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_e089549d87bd07fa_p007.png"
+            ],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_7ad84804fcc35397",
+            "category": "Recursion",
+            "start_page": 7,
+            "page_nums": [
+              7
+            ],
+            "text": "Question 16\nWrite a recursive function get_biggest() that takes In a list parameter and returns the largest\nNumber in the list. Hint: remember that vou can use the built-in function max().",
+            "text_hash": "a9ba28a9d0f09070",
+            "image_crops": [
+              "layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_7ad84804fcc35397_p007.png"
+            ],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_e4309c8df8cc3e0f",
+            "category": "Recursion",
+            "start_page": 8,
+            "page_nums": [
+              8
+            ],
+            "text": "Question 18\nNrite a recursive tunction separate() that takes in a single list of integers as a parameter. It\nhould separate the odd and even integers so that the odd numbers are together at the beginning\nf the list, and the even numbers are together at the end of the list. This “separated” list is what\nhould be returned.",
+            "text_hash": "f13387baff204b3d",
+            "image_crops": [
+              "layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_e4309c8df8cc3e0f_p008.png"
+            ],
+            "type": null,
+            "metadata": {}
+          }
+        ]
+      }
+    ]
+}

@@ -1,0 +1,274 @@
+{
+    "schema_version": "1.0",
+    "ingestions": [
+      {
+        "ingestion_id": "ing_a19eb6d72e43f129",
+        "created_at": "2026-01-21T00:20:05.330487Z",
+        "source_pdf": "exam_tests/practicefinal2.pdf",
+        "exam_id": "practicefinal2",
+        "questions": [
+          {
+            "question_id": "q_ef2a9689e7466caf",
+            "category": "Algorithm analysis",
+            "start_page": 2,
+            "page_nums": [2],
+            "text": "Problem 1\nror each of the following, give a worst-case runtime...",
+            "text_hash": "56ef4e952c9b49f9",
+            "image_crops": ["layout_debug/crops/practicefinal2/ing_a19eb6d72e43f129/q_ef2a9689e7466caf_p002.png"],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_213ed0f990f1db7f",
+            "category": "Data structures",
+            "start_page": 3,
+            "page_nums": [3],
+            "text": "Problem 2\nn a Dinary search tree, 4, In-order traversal will visit the nodes In increasing-key order...",
+            "text_hash": "bb59a106dffc5bf0",
+            "image_crops": ["layout_debug/crops/practicefinal2/ing_a19eb6d72e43f129/q_213ed0f990f1db7f_p003.png"],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_0dfea87a829d84bd",
+            "category": "Algorithm analysis",
+            "start_page": 4,
+            "page_nums": [4],
+            "text": "Problem 3\ny now you should know how to construct a minimum spanning tree from a graph...",
+            "text_hash": "0afa716f8567d3d7",
+            "image_crops": ["layout_debug/crops/practicefinal2/ing_a19eb6d72e43f129/q_0dfea87a829d84bd_p004.png"],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_df4f34e6740681f8",
+            "category": "Algorithm analysis",
+            "start_page": 5,
+            "page_nums": [5],
+            "text": "Problem 4\nYonsider the problem of finding the length of the longest path from a vertex s to a vertex ¢ in a directed acyclic graph G...",
+            "text_hash": "35c6b5b1a9993de8",
+            "image_crops": ["layout_debug/crops/practicefinal2/ing_a19eb6d72e43f129/q_df4f34e6740681f8_p005.png"],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_bfd7c481dc24610b",
+            "category": "Algorithm analysis",
+            "start_page": 6,
+            "page_nums": [6],
+            "text": "Problem 5\nonsider the following two algorithms, each of which takes an input graph...",
+            "text_hash": "74d1459adbbee185",
+            "image_crops": ["layout_debug/crops/practicefinal2/ing_a19eb6d72e43f129/q_bfd7c481dc24610b_p006.png"],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_ba87a62062b3a184",
+            "category": "Algorithm analysis",
+            "start_page": 7,
+            "page_nums": [7],
+            "text": "Problem 6\nriven an input string and a dictionary of words, develop an efficient algorithm to determine if tl iput string can be segmented...",
+            "text_hash": "0e145e15ce034e95",
+            "image_crops": ["layout_debug/crops/practicefinal2/ing_a19eb6d72e43f129/q_ba87a62062b3a184_p007.png"],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_8bdc212ca4aa5794",
+            "category": "Data structures",
+            "start_page": 8,
+            "page_nums": [8],
+            "text": "Problem 7\nVrite pseudocode tor a method reverseList( head) that takes In the head of a singly linked-list...",
+            "text_hash": "cbbb4f5eefa61406",
+            "image_crops": ["layout_debug/crops/practicefinal2/ing_a19eb6d72e43f129/q_8bdc212ca4aa5794_p008.png"],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_312e03b15a739b84",
+            "category": "Data structures",
+            "start_page": 9,
+            "page_nums": [9, 10],
+            "text": "Problem 8\nYou are given a non-empty stack S of integers. Write pseudocode for a method that sorts the stac...",
+            "text_hash": "30bbeb46c7bf2dbc",
+            "image_crops": ["layout_debug/crops/practicefinal2/ing_a19eb6d72e43f129/q_312e03b15a739b84_p009.png", "layout_debug/crops/practicefinal2/ing_a19eb6d72e43f129/q_312e03b15a739b84_p010.png"],
+            "type": null,
+            "metadata": {}
+          }
+        ]
+      },
+      {
+        "ingestion_id": "ing_a9676ce2a97e1da5",
+        "created_at": "2026-01-21T00:21:29.191311Z",
+        "source_pdf": "exam_tests/practicefinal3.pdf",
+        "exam_id": "practicefinal3",
+        "questions": [
+          {
+            "question_id": "q_8f918a91c2585522",
+            "category": "Programming logic",
+            "start_page": 1,
+            "page_nums": [1, 2],
+            "text": "Question 1] By selecting \"True\", you agree that you understand and will adhere to the Bowdoin Academic Honor code...",
+            "text_hash": "7dfb221cecc560cb",
+            "image_crops": ["layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_8f918a91c2585522_p001.png", "layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_8f918a91c2585522_p002.png"],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_cf19fc54564f3dfe",
+            "category": "Programming logic",
+            "start_page": 2,
+            "page_nums": [2],
+            "text": "Question 4\nVhich of the following is a list meth\n1. union 2. extend 3. keyerror 4. add 5. concatenate",
+            "text_hash": "ca359cc5df631738",
+            "image_crops": ["layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_cf19fc54564f3dfe_p002.png"],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_004a8f339d0de837",
+            "category": "Programming logic",
+            "start_page": 2,
+            "page_nums": [2],
+            "text": "Question 5\nAgain, there are a number of reasons - most significantly, this can impact perfo: lance.",
+            "text_hash": "a1d94097393047a4",
+            "image_crops": ["layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_004a8f339d0de837_p002.png"],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_098f2a48e9185bc9",
+            "category": "Programming logic",
+            "start_page": 2,
+            "page_nums": [2],
+            "text": "Question 6\nThat is the difference between a for-each and a while loop?",
+            "text_hash": "bf0b8bf392354b6a",
+            "image_crops": ["layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_098f2a48e9185bc9_p002.png"],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_95fb4ea6d05d7f24",
+            "category": "Programming logic",
+            "start_page": 2,
+            "page_nums": [2],
+            "text": "Question 7\nVrite a function near_and_far() that accepts three ints a, b, and c as arguments...",
+            "text_hash": "6cb4c243bcee51e0",
+            "image_crops": ["layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_95fb4ea6d05d7f24_p002.png"],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_3faba9c477321e4f",
+            "category": "Programming logic",
+            "start_page": 3,
+            "page_nums": [3],
+            "text": "Question 8\nNrite a function sum_without_twenties(a, b, c) that returns the sum of three int arguments...",
+            "text_hash": "d3a3be437f5416b7",
+            "image_crops": ["layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_3faba9c477321e4f_p003.png"],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_608959fc539562e7",
+            "category": "Programming logic",
+            "start_page": 3,
+            "page_nums": [3],
+            "text": "Question 9\nVrite a runction get_substring_positions() tnat accepts two strings as arguments...",
+            "text_hash": "a39f07d84af31a1b",
+            "image_crops": ["layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_608959fc539562e7_p003.png"],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_4c9d5c7fb0c922d8",
+            "category": "Data structures (trees, heaps, etc)",
+            "start_page": 3,
+            "page_nums": [3],
+            "text": "Question 10\nVrite a function debug() that takes in two sets, and makes a new set that contains the elements both sets have in common...",
+            "text_hash": "ff57dbb75a70fe15",
+            "image_crops": ["layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_4c9d5c7fb0c922d8_p003.png"],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_ca269491c5bba187",
+            "category": "Object oriented program",
+            "start_page": 4,
+            "page_nums": [4],
+            "text": "Question 11\nyrite a class named Book that represents each DOOK in a brary...",
+            "text_hash": "38d4b363e9ce7485",
+            "image_crops": ["layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_ca269491c5bba187_p004.png"],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_aca0a00522a71f18",
+            "category": "Object oriented program",
+            "start_page": 5,
+            "page_nums": [5],
+            "text": "Question 12\nVrite a class named ComicBook that inherits the Book class from the previous question...",
+            "text_hash": "df851802b790a9d1",
+            "image_crops": ["layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_aca0a00522a71f18_p005.png"],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_af89b67fa69c83c0",
+            "category": "Object oriented program",
+            "start_page": 5,
+            "page_nums": [5],
+            "text": "Question 12\ne name: the name of the employee. favorites: a set of this employee’s favorite Books (or ComicBooks). num_coffees: an integer...",
+            "text_hash": "8ea1278414011771",
+            "image_crops": ["layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_af89b67fa69c83c0_p005.png"],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_e089549d87bd07fa",
+            "category": "Object oriented program",
+            "start_page": 6,
+            "page_nums": [6, 7],
+            "text": "Question 14\n‘ite a class named Library. A library has the following attributes: name, employees, books...",
+            "text_hash": "a132a1bcfa543b5f",
+            "image_crops": ["layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_e089549d87bd07fa_p006.png", "layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_e089549d87bd07fa_p007.png"],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_7ad84804fcc35397",
+            "category": "Recursion",
+            "start_page": 7,
+            "page_nums": [7],
+            "text": "Question 16\nWrite a recursive function get_biggest() that takes In a list parameter...",
+            "text_hash": "a9ba28a9d0f09070",
+            "image_crops": ["layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_7ad84804fcc35397_p007.png"],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_a5dfe2c6f9fb1acf",
+            "category": "Recursion",
+            "start_page": 7,
+            "page_nums": [7],
+            "text": "Question 17\nyVrite a recursive function reverse) that returns the value of its (string) input parameter, except reversed...",
+            "text_hash": "08161141dbe0a0b1",
+            "image_crops": ["layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_a5dfe2c6f9fb1acf_p007.png"],
+            "type": null,
+            "metadata": {}
+          },
+          {
+            "question_id": "q_e4309c8df8cc3e0f",
+            "category": "Recursion",
+            "start_page": 8,
+            "page_nums": [8],
+            "text": "Question 18\nNrite a recursive tunction separate() that takes in a single list of integers as a parameter. It hould separate the odd and even integers...",
+            "text_hash": "f13387baff204b3d",
+            "image_crops": ["layout_debug/crops/practicefinal3/ing_a9676ce2a97e1da5/q_e4309c8df8cc3e0f_p008.png"],
+            "type": null,
+            "metadata": {}
+          }
+        ]
+      }
+    ]
+  }

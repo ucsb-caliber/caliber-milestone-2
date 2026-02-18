@@ -10,6 +10,8 @@
 !layout_debug/**
 !requirements.txt
 !README.md
+!vectordb/
+!vectordb/**
 
 
 !.gitignore
