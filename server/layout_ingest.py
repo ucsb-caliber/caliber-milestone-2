@@ -10,15 +10,19 @@ from pathlib import Path
 from typing import List, Tuple, Optional, Dict, Any
 
 import layoutparser as lp
+from layoutparser.elements.layout import TextBlock
+from layoutparser.elements import Layout, Rectangle
 from pdf2image import convert_from_path
 from PIL import Image
 import pytesseract
 import concurrent.futures
 import matplotlib.pyplot as plt
 import torch
+import torchvision.transforms.functional as TF
 import requests
 from pytesseract import Output
 
+import numpy as np
 
 
 _TORCH_LOAD_ORIG = torch.load
@@ -49,6 +53,7 @@ QUESTIONS_DB_FILENAME = "questions.json"  # stored inside OUTPUT_DIR
 DEBUG = True
 DEBUG_DRAW_LAYOUT = False   # <-- IMPORTANT: avoids Pillow10 layoutparser crash
 
+BATCH_SIZE = 8        
 
 # ===================== QUESTION DETECTION =====================
 
@@ -233,6 +238,51 @@ def parse_page(layout: lp.Layout, page_img: Image.Image, page_num: int) -> List[
     return page_blocks
 
 
+def detect_batch(model : Any, images : List[Image.Image]) -> List[lp.Layout]:
+    predictor = model.model # Underlying Detectron2 Model
+    device = predictor.model.device # Underlying Torch Model
+
+    inputs = []
+    for img in images:
+        img_np = np.array(img)[:, :, ::-1] # BGR conversion
+        height, width = img_np.shape[:2]
+
+        image = predictor.aug.get_transform(img_np).apply_image(img_np)
+        image = torch.as_tensor(image.astype("float32").transpose(2, 0, 1))
+        image = image.to(device)
+
+        inputs.append({
+            "image": image,
+            "height": height,
+            "width": width,
+        })
+
+    with torch.no_grad():
+        outputs = predictor.model(inputs)
+
+    layouts = []
+    for output in outputs:
+        instances = output['instances'].to("cpu")
+
+        boxes = instances.pred_boxes.tensor.numpy()
+        scores = instances.scores.numpy()
+        classes = instances.pred_classes.numpy()
+
+        layout = Layout()
+
+        for box, score, cls in zip(boxes, scores, classes):
+            x1, y1, x2, y2 = box
+            
+            textblock = TextBlock(Rectangle(x1, y1, x2, y2),  type=model.label_map.get(cls), score=score)
+            layout.append(textblock)
+
+        layout = keep_largest_blocks(layout, threshold=0.9)
+        layout = sort_layout_reading_order(layout, Y_TOL)
+
+        layouts.append(layout)
+
+    return layouts
+
 # ===================== LAYOUT FORMATTING =====================
 
 def keep_largest_blocks(layout: lp.Layout, threshold: int = 0.9) -> lp.Layout:
@@ -290,21 +340,26 @@ def parse_pdf_to_questions(pages: List[Image.Image], model: Any) -> List[Questio
     start = max(1, START_PAGE)
     end = END_PAGE or last_page
     end = min(end, last_page)
+    
+    pages = pages[start: end]
 
     all_questions: List[Question] = []
     current_question: Optional[Question] = None
 
-    max_workers = max(1, (os.cpu_count() or 2) - 1)
+    batchsize = min(BATCH_SIZE, len(pages))
+    batches = [pages[i: i+batchsize] for i in range(0, len(pages), batchsize)]
+    
+    layouts = []
 
+    for batch in batches:
+        layouts.extend(model.detect_batch(batch))
+
+    max_workers = max(1, (os.cpu_count() or 2) - 1)
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = []
-        for page_idx in range(start - 1, end):
-            page_num = page_idx + 1
-            page_img = pages[page_idx]
-
-            layout = model.detect(page_img)
-            layout = keep_largest_blocks(layout, threshold=0.9)
-            layout = sort_layout_reading_order(layout, Y_TOL)
+        for i, layout in enumerate(layouts):
+            page_num = i+1
+            page_img = pages[i]
 
             if DEBUG and DEBUG_DRAW_LAYOUT:
                 Path("pages").mkdir(exist_ok=True)
@@ -507,6 +562,9 @@ def load_layout_model():
         )
 
     print("Done! (EfficientDet PubLayNet via HF)")
+
+    model.detect_batch = lambda imgs: detect_batch(model, imgs) 
+
     return model
 
 
