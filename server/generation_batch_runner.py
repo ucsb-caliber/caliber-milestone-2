@@ -1,7 +1,7 @@
 import json
 import time
 from pathlib import Path
-from generator import run_pipeline
+from generator import generate_variant
 
 # --- configuration ---
 BASE_DIR = Path(__file__).parent.parent 
@@ -87,7 +87,7 @@ def main():
         try:
             start_time = time.time()
             
-            variant = run_pipeline(i)
+            variant = generate_variant(i)
             
             duration = time.time() - start_time
             

@@ -117,7 +117,7 @@ def normalize_answer(ans):
     return mapping.get(val, val)
 
 # --- main pipeline ---
-def run_pipeline(index):
+def generate_variant(index):
     if not DB_PATH.exists(): return
     with open(DB_PATH, "r", encoding="utf-8") as f: db = json.load(f)
     q = db["ingestions"][-1]["questions"][index]
@@ -229,4 +229,4 @@ def run_pipeline(index):
     return None
 
 if __name__ == "__main__":
-    run_pipeline(3)
+    generate_variant(3)
