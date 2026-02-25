@@ -10,7 +10,7 @@
 !layout_debug/**
 !requirements.txt
 !README.md
-
+!Dockerfile
 
 !.gitignore
 
