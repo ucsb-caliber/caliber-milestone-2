@@ -32,7 +32,7 @@ torch.load = torch_load_compat
 
 # ===================== CONFIG =====================
 
-PDF_PATH = "exam_tests/practicefinal3.pdf"
+PDF_PATH = "exam_tests/practicefinal2.pdf"
 OUTPUT_DIR = "layout_debug"
 
 START_PAGE = 1
@@ -86,7 +86,8 @@ class Question:
 
     def add_block(self, block: Block):
         self.blocks.append(block)
-        self.text_units.append(block.text)
+        if block.text and block.text.strip():
+            self.text_units.append(block.text)
 
     @property
     def text(self) -> str:
@@ -225,10 +226,11 @@ def parse_page(layout: lp.Layout, page_img: Image.Image, page_num: int) -> List[
     page_blocks: List[Block] = []
     for b in layout:
         x1, y1, x2, y2 = map(int, b.block.coordinates)
+        btype = str(b.type)
         text = get_text_within_box(ocr_data, (x1, y1, x2, y2))
-        if not text:
+        if not text and btype.lower() != "figure":
             continue
-        page_blocks.append(Block(page=page_num, bbox=(x1, y1, x2, y2), text=text, btype=b.type))
+        page_blocks.append(Block(page=page_num, bbox=(x1, y1, x2, y2), text=text, btype=btype))
 
     return page_blocks
 
@@ -317,7 +319,7 @@ def parse_pdf_to_questions(pages: List[Image.Image], model: Any) -> List[Questio
 
         for _, fut in futures:
             for block in fut.result():
-                if is_question_start(block) and block.btype in ['Text', 'Title']:
+                if is_question_start(block):
                     if current_question is not None:
                         all_questions.append(current_question)
                     current_question = Question(start_page=block.page)
