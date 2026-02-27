@@ -2309,6 +2309,442 @@
           "metadata": {}
         }
       ]
+    },
+    {
+      "ingestion_id": "ing_0339faab24ca1d5e",
+      "created_at": "2026-02-17T02:52:14.922462Z",
+      "source_pdf": "exam_tests/practicefinal2.pdf",
+      "exam_id": "final",
+      "questions": [
+        {
+          "question_id": "q_31e0c41a0c6b72bf",
+          "start_page": 2,
+          "page_nums": [
+            2
+          ],
+          "text": "Problem 1\nFor each of the following, give a worst-case runtime, and a brief explanation (a sentence or two). In cases where the algorithm isn’t specified, use the best one you can think of.\nwhere the algorithm isn’t specified, use the best one you can think of. 1. Removing the minimum element from a heap that contains n items 2. Constructing a minimum spanning tree for a connected graph with n nodes and n? edges using Kruskal’s algorithm 3. Determining whether an item occurs in an unsorted singly-linked list 4. Sorting n integers, all between 0 and 9, where n is much greater than 100. 5. Finding a spanning tree (not necessarily a minimum-weight spanning tree) for a connected graph of n nodes and nlogn edges. 6. Doing a pre-order traversal for a binary tree with n nodes.",
+          "text_hash": "622b66c686ba6f6e",
+          "image_crops": [
+            "layout_debug/crops/final/ing_0339faab24ca1d5e/q_31e0c41a0c6b72bf_p002.png"
+          ],
+          "type": null,
+          "metadata": {}
+        },
+        {
+          "question_id": "q_e780aae56fc72a3f",
+          "start_page": 2,
+          "page_nums": [
+            2
+          ],
+          "text": "6. Doing a pre-order traversal for a binary tree with n nodes.\nCS16 — Introduction to Algorithms and Data Structures",
+          "text_hash": "9d5a1a5a8c8bb0b5",
+          "image_crops": [
+            "layout_debug/crops/final/ing_0339faab24ca1d5e/q_e780aae56fc72a3f_p002.png"
+          ],
+          "type": null,
+          "metadata": {}
+        },
+        {
+          "question_id": "q_6dfdee5465592e62",
+          "start_page": 3,
+          "page_nums": [
+            3
+          ],
+          "text": "Problem 2\nIn a binary search tree, T, in-order traversal will visit the nodes in increasing-key order, thus providing a linear-time mechanism for extracting all keys in order.\nSuppose that you have some range of keys, say kl < k < k2, and like to extract all keys in T that lie within this range, and like to get the results, as before, in increasing-key order. (Note that neither k1 nor k2 needs to actually be a key in the BST, and that the returned list of keys might well be empty!) Once again, inorder traversal with a test for in-range-ness will solve the problem in worst case O(n) time, where n is the number of keys in the tree. You are to describe how to solve the problem in time O(h + s), where h is the height of the tree T, and s is the number of keys returned.\ne Give a brief description of your approach to this problem. e Write pseudocode for your algorithm. e Explain briefly why your algorithm is O(h + s).\nCS16 — Introduction to Algorithms and Data Structures",
+          "text_hash": "e30701104c98375d",
+          "image_crops": [
+            "layout_debug/crops/final/ing_0339faab24ca1d5e/q_6dfdee5465592e62_p003.png"
+          ],
+          "type": null,
+          "metadata": {}
+        },
+        {
+          "question_id": "q_2cf875a37173fd50",
+          "start_page": 4,
+          "page_nums": [
+            4
+          ],
+          "text": "Problem 3\nBy now you should know how to construct a minimum spanning tree from a graph. However, sometimes we don’t want a minimum spanning tree — perhaps we want to force our spanning tree to contain specific edges, regardless of whether or not those edges are optimal.\nSuppose you are given an undirected graph G = (V, E) with edge weights w,, and an acyclic set of edges F’, where is a subset of E. (You may assume the edges are decorated such that “inF(e)” will return either true if e is one of the edges in or false otherwise.) Develop an algorithm that runs in O(|E|log|£|) and returns the lightest spanning tree T such that the edges of F are all contained in T.\ne Give a brief description of your approach to this problem. e Write pseudocode for your algorithm. e Explain briefly why your algorithm is log\nCS16 — Introduction to Algorithms and Data Structures",
+          "text_hash": "6b48a85048562900",
+          "image_crops": [
+            "layout_debug/crops/final/ing_0339faab24ca1d5e/q_2cf875a37173fd50_p004.png"
+          ],
+          "type": null,
+          "metadata": {}
+        },
+        {
+          "question_id": "q_ef412b5403854d05",
+          "start_page": 5,
+          "page_nums": [
+            5
+          ],
+          "text": "Problem 4\nConsider the problem of finding the length of the longest path from a vertex s to a vertex t ina directed acyclic graph G = with edge-weights we.\ne Student A thinks that they can solve this problem using an altered Dijkstra’s Algorithm that stores the maximum cost of each node and uses a maximum cost priority queue (a priority queue that returns the maximum value instead of the minimum value). Why would this not work? e Describe and write pseudocode for an algorithm that would work. If there exists no path between s and t, then return oo.\nCS16 — Introduction to Algorithms and Data Structures",
+          "text_hash": "aa67e4e58554ca74",
+          "image_crops": [
+            "layout_debug/crops/final/ing_0339faab24ca1d5e/q_ef412b5403854d05_p005.png"
+          ],
+          "type": null,
+          "metadata": {}
+        },
+        {
+          "question_id": "q_56e9f487049fb904",
+          "start_page": 6,
+          "page_nums": [
+            6
+          ],
+          "text": "Problem 5\nConsider the following two algorithms, each of which takes an input graph, G = (V, E) with edge lengths v).\nAlgorithm A: This algorithm picks a random node s, runs Dijsktras algorithm on it to find dis- tances from s to all nodes, and retains the |V|/2 nodes that are closest to s [in the case of a tie, it chooses randomly.]. It then recursively calls itself on the graph consisting of these nearby nodes and all edges in E that join such nearby nodes. For a graph with a single vertex, the algorithm returns that node. This particular implementation of Dijkstra uses an array to represent the priority queue.\nAlgorithm B: The second algorithm sorts the edges by length, and returns the length of the median edge.\nWhat are the runtimes of each algorithm? For what kinds of graphs would Algorithm A be faster? Algorithm B? Briefly explain your answers.\nCS16 — Introduction to Algorithms and Data Structures",
+          "text_hash": "9a8d31c916793341",
+          "image_crops": [
+            "layout_debug/crops/final/ing_0339faab24ca1d5e/q_56e9f487049fb904_p006.png"
+          ],
+          "type": null,
+          "metadata": {}
+        },
+        {
+          "question_id": "q_70363bbbce6435a4",
+          "start_page": 7,
+          "page_nums": [
+            7
+          ],
+          "text": "Problem 6\nGiven an input string and a dictionary of words, develop an efficient algorithm to determine if the input string can be segmented into a space-separated sequence of dictionary words. There is no limit to the number of times you may use each word in the dictionary.\nFor example, suppose we have the following dictionary of known words:\nFor example, suppose we have the following dictionary of known words: dictionary = {\"i\", \"like\", \"ice\", \"cream\", \"icecream\", \"popsicle\"} Consider the following input/output pairs. Input: \"ilike\" Output: True We can segment the string into \"i like\" using words from the dictionary.\nWe can segment the string into \"i like\" using words from the dictionary.\nWe can represent the string as either \"i like icecream\" or \"i like ice cream.\"\nWe can’t segment the string into words contained in our dictionary. Note that a greedy approach will not always guarantee the correct solution! For example, consider the following test case:\ndictionary = {\"a\", \"an\", \"ill\", \"pill\", \"pillow\", \"case\"} Input: \"pillowcase\" Output: True We can segment the string into \"pillow case.\"\nIn this case, if we tried to find the first matching prefix, we would pick “pill.” However, that makes the rest of the string (“owcase”) unsegmentable given our dictionary.\nWrite pseudocode for your algorithm.\nCS16 — Introduction to Algorithms and Data Structures",
+          "text_hash": "fdb5dd4f8bb886f5",
+          "image_crops": [
+            "layout_debug/crops/final/ing_0339faab24ca1d5e/q_70363bbbce6435a4_p007.png"
+          ],
+          "type": null,
+          "metadata": {}
+        },
+        {
+          "question_id": "q_ca507479832cf26e",
+          "start_page": 8,
+          "page_nums": [
+            8
+          ],
+          "text": "Problem 7\nWrite pseudocode for a method reverseList(head) that takes in the head of a singly linked-list and *reverses’ the list. Note that a singly linked-list is simply a linked list in which every node has a pointer to its next element in the list and the last node’s next pointer points to null. Example: Given a linked listA B > C D with head A the method turns it into the list! D+ C + B > A with head D. Explain the runtime of your solution.\nCS16 — Introduction to Algorithms and Data Structures",
+          "text_hash": "9f969cc95e7eff2a",
+          "image_crops": [
+            "layout_debug/crops/final/ing_0339faab24ca1d5e/q_ca507479832cf26e_p008.png"
+          ],
+          "type": null,
+          "metadata": {}
+        },
+        {
+          "question_id": "q_3ae3422bcbab1dae",
+          "start_page": 9,
+          "page_nums": [
+            9
+          ],
+          "text": "Problem 8\nYou are given a non-empty stack S of integers. Write pseudocode for a method that sorts the stack in ascending order from the bottom-up (i.e. the bottom element is the smallest integer). You are allowed to use the push() , pop(), peek(), isEmpty() methods of a stack. You may use another stack in order to solve this problem, but you may not use other data structures in your solution. Hint : You can accomplish this by creating one more stack in your method, and transfer elements into the new stack each time checking that the transfer doesn’t violate the sort order. Example : Here’s a stack\n‘Your method should return a stack that looks like this:\n‘Your method should return a stack that looks like this: —4— — 3 — —2—\nCS16 — Introduction to Algorithms and Data Structures",
+          "text_hash": "e2694f87e462c0c7",
+          "image_crops": [
+            "layout_debug/crops/final/ing_0339faab24ca1d5e/q_3ae3422bcbab1dae_p009.png"
+          ],
+          "type": null,
+          "metadata": {}
+        },
+        {
+          "question_id": "q_e514711c679b2f18",
+          "start_page": 10,
+          "page_nums": [
+            10
+          ],
+          "text": "Problem 9",
+          "text_hash": "892c4dd0acee3d76",
+          "image_crops": [
+            "layout_debug/crops/final/ing_0339faab24ca1d5e/q_e514711c679b2f18_p010.png"
+          ],
+          "type": null,
+          "metadata": {}
+        },
+        {
+          "question_id": "q_910149b6ab1eee47",
+          "start_page": 10,
+          "page_nums": [
+            10
+          ],
+          "text": "1. What is the purpose of the learning rate 7?",
+          "text_hash": "e5ce502e7a13d75d",
+          "image_crops": [
+            "layout_debug/crops/final/ing_0339faab24ca1d5e/q_910149b6ab1eee47_p010.png"
+          ],
+          "type": null,
+          "metadata": {}
+        },
+        {
+          "question_id": "q_acad78839d9cd40b",
+          "start_page": 10,
+          "page_nums": [
+            10
+          ],
+          "text": "2. Name two defining aspects of the functional paradigm and describe them in a few sentences.",
+          "text_hash": "212027665b4444ab",
+          "image_crops": [
+            "layout_debug/crops/final/ing_0339faab24ca1d5e/q_acad78839d9cd40b_p010.png"
+          ],
+          "type": null,
+          "metadata": {}
+        },
+        {
+          "question_id": "q_b2d79f1793ecbe19",
+          "start_page": 10,
+          "page_nums": [
+            10
+          ],
+          "text": "3. Are there graphs where Dijkstra’s will fail? If so, explain why. If not, explain why not.",
+          "text_hash": "950422ce940afb38",
+          "image_crops": [
+            "layout_debug/crops/final/ing_0339faab24ca1d5e/q_b2d79f1793ecbe19_p010.png"
+          ],
+          "type": null,
+          "metadata": {}
+        },
+        {
+          "question_id": "q_cf9a736db31ca1bd",
+          "start_page": 10,
+          "page_nums": [
+            10
+          ],
+          "text": "4. Describe one difference between problems in the sets P and NP.",
+          "text_hash": "c1d4c22c591a8a9b",
+          "image_crops": [
+            "layout_debug/crops/final/ing_0339faab24ca1d5e/q_cf9a736db31ca1bd_p010.png"
+          ],
+          "type": null,
+          "metadata": {}
+        },
+        {
+          "question_id": "q_ee654b745877d957",
+          "start_page": 10,
+          "page_nums": [
+            10
+          ],
+          "text": "5. What is the difference between online algorithms and offline algorithms? Give an example of a time that we have used each in class.\nCS16 — Introduction to Algorithms and Data Structures",
+          "text_hash": "e96302c1c90cb94b",
+          "image_crops": [
+            "layout_debug/crops/final/ing_0339faab24ca1d5e/q_ee654b745877d957_p010.png"
+          ],
+          "type": null,
+          "metadata": {}
+        }
+      ]
+    },
+    {
+      "ingestion_id": "ing_b8ee467de9e16552",
+      "created_at": "2026-02-25T10:43:18.394409Z",
+      "source_pdf": "exam_tests/practicefinal2.pdf",
+      "exam_id": "hw3",
+      "questions": [
+        {
+          "question_id": "q_55b3e5416c8545e3",
+          "start_page": 2,
+          "page_nums": [
+            2
+          ],
+          "text": "Problem 1\nFor each of the following, give a worst-case runtime, and a brief explanation (a sentence or two). In cases where the algorithm isn’t specified, use the best one you can think of.\nwhere the algorithm isn’t specified, use the best one you can think of. 1. Removing the minimum element from a heap that contains n items 2. Constructing a minimum spanning tree for a connected graph with n nodes and n? edges using Kruskal’s algorithm 3. Determining whether an item occurs in an unsorted singly-linked list 4. Sorting n integers, all between 0 and 9, where n is much greater than 100. 5. Finding a spanning tree (not necessarily a minimum-weight spanning tree) for a connected graph of n nodes and nlogn edges. 6. Doing a pre-order traversal for a binary tree with n nodes.",
+          "text_hash": "622b66c686ba6f6e",
+          "image_crops": [
+            "layout_debug/crops/hw3/ing_b8ee467de9e16552/q_55b3e5416c8545e3_p002.png"
+          ],
+          "type": null,
+          "metadata": {}
+        },
+        {
+          "question_id": "q_21c7b7b8b2884d60",
+          "start_page": 2,
+          "page_nums": [
+            2
+          ],
+          "text": "6. Doing a pre-order traversal for a binary tree with n nodes.\nCS16 — Introduction to Algorithms and Data Structures",
+          "text_hash": "9d5a1a5a8c8bb0b5",
+          "image_crops": [
+            "layout_debug/crops/hw3/ing_b8ee467de9e16552/q_21c7b7b8b2884d60_p002.png"
+          ],
+          "type": null,
+          "metadata": {}
+        },
+        {
+          "question_id": "q_0c7abbd09835748a",
+          "start_page": 3,
+          "page_nums": [
+            3
+          ],
+          "text": "Problem 2\nIn a binary search tree, T, in-order traversal will visit the nodes in increasing-key order, thus providing a linear-time mechanism for extracting all keys in order.\nSuppose that you have some range of keys, say kl < k < k2, and like to extract all keys in T that lie within this range, and like to get the results, as before, in increasing-key order. (Note that neither k1 nor k2 needs to actually be a key in the BST, and that the returned list of keys might well be empty!) Once again, inorder traversal with a test for in-range-ness will solve the problem in worst case O(n) time, where n is the number of keys in the tree. You are to describe how to solve the problem in time O(h + s), where h is the height of the tree T, and s is the number of keys returned.\ne Give a brief description of your approach to this problem. e Write pseudocode for your algorithm. e Explain briefly why your algorithm is O(h + s).\nCS16 — Introduction to Algorithms and Data Structures",
+          "text_hash": "e30701104c98375d",
+          "image_crops": [
+            "layout_debug/crops/hw3/ing_b8ee467de9e16552/q_0c7abbd09835748a_p003.png"
+          ],
+          "type": null,
+          "metadata": {}
+        },
+        {
+          "question_id": "q_1e0bd6bae9ec9486",
+          "start_page": 4,
+          "page_nums": [
+            4
+          ],
+          "text": "Problem 3\nBy now you should know how to construct a minimum spanning tree from a graph. However, sometimes we don’t want a minimum spanning tree — perhaps we want to force our spanning tree to contain specific edges, regardless of whether or not those edges are optimal.\nSuppose you are given an undirected graph G = (V, E) with edge weights w,, and an acyclic set of edges F’, where is a subset of E. (You may assume the edges are decorated such that “inF(e)” will return either true if e is one of the edges in or false otherwise.) Develop an algorithm that runs in O(|E|log|£|) and returns the lightest spanning tree T such that the edges of F are all contained in T.\ne Give a brief description of your approach to this problem. e Write pseudocode for your algorithm. e Explain briefly why your algorithm is log\nCS16 — Introduction to Algorithms and Data Structures",
+          "text_hash": "6b48a85048562900",
+          "image_crops": [
+            "layout_debug/crops/hw3/ing_b8ee467de9e16552/q_1e0bd6bae9ec9486_p004.png"
+          ],
+          "type": null,
+          "metadata": {}
+        },
+        {
+          "question_id": "q_2b227b844a530130",
+          "start_page": 5,
+          "page_nums": [
+            5
+          ],
+          "text": "Problem 4\nConsider the problem of finding the length of the longest path from a vertex s to a vertex t ina directed acyclic graph G = with edge-weights we.\ne Student A thinks that they can solve this problem using an altered Dijkstra’s Algorithm that stores the maximum cost of each node and uses a maximum cost priority queue (a priority queue that returns the maximum value instead of the minimum value). Why would this not work? e Describe and write pseudocode for an algorithm that would work. If there exists no path between s and t, then return oo.\nCS16 — Introduction to Algorithms and Data Structures",
+          "text_hash": "aa67e4e58554ca74",
+          "image_crops": [
+            "layout_debug/crops/hw3/ing_b8ee467de9e16552/q_2b227b844a530130_p005.png"
+          ],
+          "type": null,
+          "metadata": {}
+        },
+        {
+          "question_id": "q_4d1b23aabe3a3f58",
+          "start_page": 6,
+          "page_nums": [
+            6
+          ],
+          "text": "Problem 5\nConsider the following two algorithms, each of which takes an input graph, G = (V, E) with edge lengths v).\nAlgorithm A: This algorithm picks a random node s, runs Dijsktras algorithm on it to find dis- tances from s to all nodes, and retains the |V|/2 nodes that are closest to s [in the case of a tie, it chooses randomly.]. It then recursively calls itself on the graph consisting of these nearby nodes and all edges in E that join such nearby nodes. For a graph with a single vertex, the algorithm returns that node. This particular implementation of Dijkstra uses an array to represent the priority queue.\nAlgorithm B: The second algorithm sorts the edges by length, and returns the length of the median edge.\nWhat are the runtimes of each algorithm? For what kinds of graphs would Algorithm A be faster? Algorithm B? Briefly explain your answers.\nCS16 — Introduction to Algorithms and Data Structures",
+          "text_hash": "9a8d31c916793341",
+          "image_crops": [
+            "layout_debug/crops/hw3/ing_b8ee467de9e16552/q_4d1b23aabe3a3f58_p006.png"
+          ],
+          "type": null,
+          "metadata": {}
+        },
+        {
+          "question_id": "q_b6aab55e64fbe103",
+          "start_page": 7,
+          "page_nums": [
+            7
+          ],
+          "text": "Problem 6\nGiven an input string and a dictionary of words, develop an efficient algorithm to determine if the input string can be segmented into a space-separated sequence of dictionary words. There is no limit to the number of times you may use each word in the dictionary.\nFor example, suppose we have the following dictionary of known words:\nFor example, suppose we have the following dictionary of known words: dictionary = {\"i\", \"like\", \"ice\", \"cream\", \"icecream\", \"popsicle\"} Consider the following input/output pairs. Input: \"ilike\" Output: True We can segment the string into \"i like\" using words from the dictionary.\nWe can segment the string into \"i like\" using words from the dictionary.\nWe can represent the string as either \"i like icecream\" or \"i like ice cream.\"\nWe can’t segment the string into words contained in our dictionary. Note that a greedy approach will not always guarantee the correct solution! For example, consider the following test case:\ndictionary = {\"a\", \"an\", \"ill\", \"pill\", \"pillow\", \"case\"} Input: \"pillowcase\" Output: True We can segment the string into \"pillow case.\"\nIn this case, if we tried to find the first matching prefix, we would pick “pill.” However, that makes the rest of the string (“owcase”) unsegmentable given our dictionary.\nWrite pseudocode for your algorithm.\nCS16 — Introduction to Algorithms and Data Structures",
+          "text_hash": "fdb5dd4f8bb886f5",
+          "image_crops": [
+            "layout_debug/crops/hw3/ing_b8ee467de9e16552/q_b6aab55e64fbe103_p007.png"
+          ],
+          "type": null,
+          "metadata": {}
+        },
+        {
+          "question_id": "q_880e4b8419cc8737",
+          "start_page": 8,
+          "page_nums": [
+            8
+          ],
+          "text": "Problem 7\nWrite pseudocode for a method reverseList(head) that takes in the head of a singly linked-list and *reverses’ the list. Note that a singly linked-list is simply a linked list in which every node has a pointer to its next element in the list and the last node’s next pointer points to null. Example: Given a linked listA B > C D with head A the method turns it into the list! D+ C + B > A with head D. Explain the runtime of your solution.\nCS16 — Introduction to Algorithms and Data Structures",
+          "text_hash": "9f969cc95e7eff2a",
+          "image_crops": [
+            "layout_debug/crops/hw3/ing_b8ee467de9e16552/q_880e4b8419cc8737_p008.png"
+          ],
+          "type": null,
+          "metadata": {}
+        },
+        {
+          "question_id": "q_3795e8fa96cb2127",
+          "start_page": 9,
+          "page_nums": [
+            9
+          ],
+          "text": "Problem 8\nYou are given a non-empty stack S of integers. Write pseudocode for a method that sorts the stack in ascending order from the bottom-up (i.e. the bottom element is the smallest integer). You are allowed to use the push() , pop(), peek(), isEmpty() methods of a stack. You may use another stack in order to solve this problem, but you may not use other data structures in your solution. Hint : You can accomplish this by creating one more stack in your method, and transfer elements into the new stack each time checking that the transfer doesn’t violate the sort order. Example : Here’s a stack\n‘Your method should return a stack that looks like this:\n‘Your method should return a stack that looks like this: —4— — 3 — —2—\nCS16 — Introduction to Algorithms and Data Structures",
+          "text_hash": "e2694f87e462c0c7",
+          "image_crops": [
+            "layout_debug/crops/hw3/ing_b8ee467de9e16552/q_3795e8fa96cb2127_p009.png"
+          ],
+          "type": null,
+          "metadata": {}
+        },
+        {
+          "question_id": "q_d4a2982e7ed7fc6d",
+          "start_page": 10,
+          "page_nums": [
+            10
+          ],
+          "text": "Problem 9",
+          "text_hash": "892c4dd0acee3d76",
+          "image_crops": [
+            "layout_debug/crops/hw3/ing_b8ee467de9e16552/q_d4a2982e7ed7fc6d_p010.png"
+          ],
+          "type": null,
+          "metadata": {}
+        },
+        {
+          "question_id": "q_0c3ece6d8dc91f48",
+          "start_page": 10,
+          "page_nums": [
+            10
+          ],
+          "text": "1. What is the purpose of the learning rate 7?",
+          "text_hash": "e5ce502e7a13d75d",
+          "image_crops": [
+            "layout_debug/crops/hw3/ing_b8ee467de9e16552/q_0c3ece6d8dc91f48_p010.png"
+          ],
+          "type": null,
+          "metadata": {}
+        },
+        {
+          "question_id": "q_f86159076553f7c9",
+          "start_page": 10,
+          "page_nums": [
+            10
+          ],
+          "text": "2. Name two defining aspects of the functional paradigm and describe them in a few sentences.",
+          "text_hash": "212027665b4444ab",
+          "image_crops": [
+            "layout_debug/crops/hw3/ing_b8ee467de9e16552/q_f86159076553f7c9_p010.png"
+          ],
+          "type": null,
+          "metadata": {}
+        },
+        {
+          "question_id": "q_dc7eaa223f534862",
+          "start_page": 10,
+          "page_nums": [
+            10
+          ],
+          "text": "3. Are there graphs where Dijkstra’s will fail? If so, explain why. If not, explain why not.",
+          "text_hash": "950422ce940afb38",
+          "image_crops": [
+            "layout_debug/crops/hw3/ing_b8ee467de9e16552/q_dc7eaa223f534862_p010.png"
+          ],
+          "type": null,
+          "metadata": {}
+        },
+        {
+          "question_id": "q_fe30188d1a123ce6",
+          "start_page": 10,
+          "page_nums": [
+            10
+          ],
+          "text": "4. Describe one difference between problems in the sets P and NP.",
+          "text_hash": "c1d4c22c591a8a9b",
+          "image_crops": [
+            "layout_debug/crops/hw3/ing_b8ee467de9e16552/q_fe30188d1a123ce6_p010.png"
+          ],
+          "type": null,
+          "metadata": {}
+        },
+        {
+          "question_id": "q_56be3c8c0b1ad0fb",
+          "start_page": 10,
+          "page_nums": [
+            10
+          ],
+          "text": "5. What is the difference between online algorithms and offline algorithms? Give an example of a time that we have used each in class.\nCS16 — Introduction to Algorithms and Data Structures",
+          "text_hash": "e96302c1c90cb94b",
+          "image_crops": [
+            "layout_debug/crops/hw3/ing_b8ee467de9e16552/q_56be3c8c0b1ad0fb_p010.png"
+          ],
+          "type": null,
+          "metadata": {}
+        }
+      ]
     }
   ]
 }
