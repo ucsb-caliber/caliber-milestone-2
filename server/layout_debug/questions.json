@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0",
+  "ingestions": [
+    {
+      "ingestion_id": "ing_7c8dd3bada0afb6c",
+      "created_at": "2026-02-17T04:22:53.767785Z",
+      "source_pdf": "C:\\Users\\NickB\\projects\\caliber-milestone-2\\server\\uploads\\8f44eace17e346a090bcd0a6ed2a169b_homework5 (1).pdf",
+      "exam_id": "practice_final_3",
+      "questions": []
+    },
+    {
+      "ingestion_id": "ing_c86f478eaa171d2e",
+      "created_at": "2026-02-17T04:28:32.845011Z",
+      "source_pdf": "C:\\Users\\NickB\\projects\\caliber-milestone-2\\server\\uploads\\ea556e28a64a4d5388a025e0f16a1352_Homework_6.pdf",
+      "exam_id": "practice_final_3",
+      "questions": []
+    },
+    {
+      "ingestion_id": "ing_8b33f8b0dd15bcb3",
+      "created_at": "2026-02-17T04:29:59.505889Z",
+      "source_pdf": "C:\\Users\\NickB\\projects\\caliber-milestone-2\\server\\uploads\\130f8f3fdf144fb1aa02179a8a8c5136_Homework_6.pdf",
+      "exam_id": "brahhhh",
+      "questions": []
+    },
+    {
+      "ingestion_id": "ing_943823afb175c8fc",
+      "created_at": "2026-02-17T04:32:33.970296Z",
+      "source_pdf": "C:\\Users\\NickB\\projects\\caliber-milestone-2\\server\\uploads\\2acc36a3b36845ad8ffc34a46118ab1b_ap_sample_questions_from_college_board.pdf",
+      "exam_id": "college_board",
+      "questions": []
+    }
+  ]
+}

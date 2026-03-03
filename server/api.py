@@ -6,9 +6,9 @@ import importlib.util
 import threading
 import uuid
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi import Body, FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
@@ -78,6 +78,7 @@ def _run_ingest(
     start_page: int,
     end_page: int,
     output_dir: Path,
+    classify_bloom: bool = True,
 ) -> Dict[str, Any]:
     """
     Runs your existing pipeline in "server mode" (no GUI popups),
@@ -122,6 +123,16 @@ def _run_ingest(
         q.qtype = None
         q.metadata = {}
 
+    # Bloom's Taxonomy classification (optional)
+    if classify_bloom:
+        try:
+            INGEST_MOD.run_bloom_on_questions(questions)
+        except Exception as e:
+            return JSONResponse(
+                {"ok": False, "error": f"Bloom classification failed: {e}"},
+                status_code=500,
+            )
+
     # Crop images
     crops_dir = output_dir / "crops" / exam_id_norm / ingestion_id
     INGEST_MOD.crop_and_output_questions(pages, questions, crops_dir=crops_dir)
@@ -143,16 +154,19 @@ def _run_ingest(
         preview = q.text.replace("\n", " ").strip()
         if len(preview) > 240:
             preview = preview[:240] + "…"
-        q_summaries.append(
-            {
-                "index": i,
-                "question_id": q.question_id,
-                "start_page": q.start_page,
-                "page_nums": q.page_nums(),
-                "text_preview": preview,
-                "image_crops": q.image_crops,
-            }
-        )
+        summary: Dict[str, Any] = {
+            "index": i,
+            "question_id": q.question_id,
+            "start_page": q.start_page,
+            "page_nums": q.page_nums(),
+            "text_preview": preview,
+            "image_crops": q.image_crops,
+        }
+        if q.metadata.get("bloom_level") is not None:
+            summary["bloom_level"] = q.metadata.get("bloom_level")
+            summary["bloom_confidence"] = q.metadata.get("bloom_confidence")
+            summary["bloom_reasoning"] = q.metadata.get("bloom_reasoning")
+        q_summaries.append(summary)
 
     return {
         "ok": True,
@@ -192,6 +206,7 @@ async def ingest(
     exam_id: str = Form(...),
     start_page: int = Form(1),
     end_page: int = Form(0),
+    classify_bloom: bool = Form(True),
     pdf: UploadFile = File(...),
 ) -> JSONResponse:
     if pdf.content_type not in ("application/pdf", "application/x-pdf"):
@@ -217,6 +232,7 @@ async def ingest(
             start_page,
             end_page,
             DEFAULT_OUTPUT_DIR,
+            classify_bloom,
         )
         return JSONResponse(result)
     except Exception as e:
@@ -230,3 +246,39 @@ async def ingest(
 @app.get("/health")
 def health() -> Dict[str, Any]:
     return {"ok": True}
+
+
+# ----------------------------
+# Bloom's Taxonomy classification (standalone, for testing)
+# ----------------------------
+
+def _classify_bloom_sync(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Run Bloom classifier; payload has 'text' or 'texts'."""
+    if "text" in payload:
+        from server.bloom_classifier import classify
+        result = classify(payload["text"])
+        return {"ok": True, "result": result}
+    if "texts" in payload:
+        from server.bloom_classifier import classify_batch
+        results = classify_batch(payload["texts"])
+        return {"ok": True, "results": results}
+    return {"ok": False, "error": "Provide 'text' (string) or 'texts' (array of strings)."}
+
+
+@app.post("/api/classify-bloom")
+async def classify_bloom_endpoint(
+    payload: Dict[str, Any] = Body(..., examples=[{"text": "What is the time complexity of Dijkstra's algorithm?"}]),
+) -> JSONResponse:
+    """
+    Classify one or more questions into Bloom's Taxonomy (revised).
+    Body: {"text": "one question"} or {"texts": ["q1", "q2", ...]}.
+    Returns bloom_level, bloom_confidence, bloom_reasoning per question.
+    """
+    try:
+        result = await run_in_threadpool(_classify_bloom_sync, payload)
+        return JSONResponse(result)
+    except Exception as e:
+        return JSONResponse(
+            {"ok": False, "error": str(e)},
+            status_code=500,
+        )
