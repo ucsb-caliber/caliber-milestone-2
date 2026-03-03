@@ -251,6 +251,22 @@ If something works locally but not in Docker:
 
 ---
 
+## Vector DB Updates 
+
+Added in `vector-database` branch:
+
+- Exemplar bootstrap file: `vectordb/category_exemplars.json`
+- Exemplar + live weighted voting in `vectordb/vectordb_workflow.py`
+- Configurable Chroma collection names in `vectordb/chroma_db.py`
+- Evaluation script: `vectordb/eval_workflow.py`
+
+### Run Vector DB Workflow
+
+```bash
+python3 vectordb/vectordb_workflow.py
+```
+
+
 
 ```
 ```

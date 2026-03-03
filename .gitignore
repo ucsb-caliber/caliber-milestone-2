@@ -38,3 +38,7 @@
 
 # macOS
 **/.DS_Store
+
+# Local vector index artifacts
+vectordb/chroma_persist/
+vectordb/chroma_persist/**

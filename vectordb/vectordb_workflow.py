@@ -5,7 +5,7 @@ Uses Option A for vector lookup: Chroma document ID is str(Question.id); get_cat
 import json
 import os
 import sys
-from collections import Counter
+from collections import defaultdict
 
 # Allow running as script: python vectordb/vectordb_workflow.py (project root on path)
 _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -23,6 +23,12 @@ _DEFAULT_JSON_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     "questions_categories.json",
 )
+_DEFAULT_EXEMPLARS_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "category_exemplars.json",
+)
+_LIVE_COLLECTION = "question_embeddings"
+_EXEMPLAR_COLLECTION = "question_embeddings_exemplars"
 
 
 class DBWorkflow:
@@ -32,13 +38,34 @@ class DBWorkflow:
         database_url: str | None = None,
         chroma_persist_dir: str | None = None,
         has_categories: bool = True,
+        exemplar_json_path: str | None = None,
+        use_exemplars: bool = True,
+        live_weight: float = 1.0,
+        exemplar_weight: float = 1.25,
+        embedding_max_length: int = 2048,
     ) -> None:
         self.json_path = json_path or _DEFAULT_JSON_PATH
         self.engine = engine  # shared engine from vectordb.database (database_url ignored for now)
         create_db_and_tables()
-        self.vector_db = QuestionVectorDB(persist_directory=chroma_persist_dir)
+        self.vector_db = QuestionVectorDB(
+            persist_directory=chroma_persist_dir,
+            collection_name=_LIVE_COLLECTION,
+        )
         self.embedding_model = self.load_embedding()
         self.has_categories = has_categories
+        self.use_exemplars = use_exemplars
+        self.live_weight = live_weight
+        self.exemplar_weight = exemplar_weight
+        self.embedding_max_length = embedding_max_length
+        self.exemplar_json_path = exemplar_json_path or _DEFAULT_EXEMPLARS_PATH
+        self.exemplar_db = None
+        self.exemplar_labels: dict[str, str] = {}
+        if self.use_exemplars:
+            self.exemplar_db = QuestionVectorDB(
+                persist_directory=chroma_persist_dir,
+                collection_name=_EXEMPLAR_COLLECTION,
+            )
+            self._load_exemplars()
 
     def load_embedding(self, model_name: str = "BAAI/bge-m3", use_fp16: bool = False):
         """Load the embedding model (e.g. BGE-M3)."""
@@ -71,7 +98,7 @@ class DBWorkflow:
         """Convert string text into a vector embedding using the loaded model (call load_embedding first)."""
         if self.embedding_model is None:
             raise RuntimeError("Embedding model not loaded. Call load_embedding() first.")
-        dense = self.embedding_model.encode([text], max_length=8192)["dense_vecs"]
+        dense = self.embedding_model.encode([text], max_length=self.embedding_max_length)["dense_vecs"]
         return dense[0].tolist()
     def assign_category(
         self,
@@ -91,25 +118,95 @@ class DBWorkflow:
             return "Review"
         if embedding is None:
             embedding = self.get_embedding(question_text)
-        result = self.vector_db.get_n_closest(embedding, n=n)
-        ids = result.get("ids") or []
-        if not ids:
-            print("[assign_category] assigned: Review (no neighbors)")
+        vote_weights = self._collect_vote_weights(embedding=embedding, n=n)
+        if not vote_weights:
+            print("[assign_category] assigned: Review (no neighbor labels)")
             return "Review"
-        categories = []
-        for qid in ids:
-            cat = self.get_category(qid)
-            if cat is not None:
-                categories.append(cat)
-        if not categories:
-            print("[assign_category] assigned: Review (no categories from neighbors)")
-            return "Review"
-        (most_common_cat, count) = Counter(categories).most_common(1)[0]
-        if count > len(categories) * threshold:
-            print(f"[assign_category] assigned: {most_common_cat}")
+        ordered_votes = sorted(vote_weights.items(), key=lambda x: x[1], reverse=True)
+        (most_common_cat, best_weight) = ordered_votes[0]
+        total_weight = sum(vote_weights.values())
+        if best_weight > total_weight * threshold:
+            print(f"[assign_category] assigned: {most_common_cat} (weighted vote)")
             return most_common_cat
-        print("[assign_category] assigned: Review (no majority)")
+        print("[assign_category] assigned: Review (no weighted majority)")
         return "Review"
+
+    def _distance_to_similarity(self, distance: float | None) -> float:
+        """Convert Chroma cosine distance to a bounded similarity in [0, 1]."""
+        if distance is None:
+            return 1.0
+        return max(0.0, min(1.0, 1.0 - float(distance)))
+
+    def _collect_vote_weights(self, embedding: list[float], n: int) -> dict[str, float]:
+        """Collect weighted votes from live question DB and optional exemplar DB."""
+        vote_weights: dict[str, float] = defaultdict(float)
+
+        live_result = self.vector_db.get_n_closest(embedding, n=n)
+        live_ids = live_result.get("ids") or []
+        live_distances = live_result.get("distances") or []
+        for idx, qid in enumerate(live_ids):
+            label = self.get_category(qid)
+            if label is None:
+                continue
+            distance = live_distances[idx] if idx < len(live_distances) else None
+            vote_weights[label] += self.live_weight * self._distance_to_similarity(distance)
+
+        if self.exemplar_db is not None:
+            exemplar_result = self.exemplar_db.get_n_closest(embedding, n=n)
+            exemplar_ids = exemplar_result.get("ids") or []
+            exemplar_distances = exemplar_result.get("distances") or []
+            for idx, exemplar_id in enumerate(exemplar_ids):
+                label = self.exemplar_labels.get(exemplar_id)
+                if label is None:
+                    continue
+                distance = exemplar_distances[idx] if idx < len(exemplar_distances) else None
+                vote_weights[label] += self.exemplar_weight * self._distance_to_similarity(distance)
+
+        return dict(vote_weights)
+
+    def _iter_exemplar_questions(self, payload: dict) -> list[dict]:
+        """
+        Return exemplar records as dicts with at least text/category.
+        Supports both:
+        - {"exemplars": [...]}
+        - ingestion-shaped payload with "ingestions" -> "questions"
+        """
+        exemplars: list[dict] = []
+        if isinstance(payload.get("exemplars"), list):
+            for ex in payload["exemplars"]:
+                if isinstance(ex, dict):
+                    exemplars.append(ex)
+            return exemplars
+
+        for ingestion in payload.get("ingestions", []):
+            for q in ingestion.get("questions", []):
+                if isinstance(q, dict):
+                    exemplars.append(q)
+        return exemplars
+
+    def _load_exemplars(self) -> None:
+        """Load exemplar labels and vectors into the exemplar collection if configured."""
+        if self.exemplar_db is None:
+            return
+        if not os.path.exists(self.exemplar_json_path):
+            print(f"[exemplars] file not found: {self.exemplar_json_path} (continuing without exemplars)")
+            return
+        with open(self.exemplar_json_path, encoding="utf-8") as f:
+            payload = json.load(f)
+
+        exemplars = self._iter_exemplar_questions(payload)
+        for idx, ex in enumerate(exemplars):
+            text = (ex.get("text") or "").strip()
+            label = (ex.get("category") or "").strip()
+            if not text or not label:
+                continue
+            exemplar_id = str(ex.get("id") or ex.get("question_id") or f"ex_{idx}")
+            embedding = ex.get("embedding")
+            if embedding is None:
+                embedding = self.get_embedding(text)
+            self.exemplar_db.add_embedding(exemplar_id, embedding)
+            self.exemplar_labels[exemplar_id] = label
+        print(f"[exemplars] loaded {len(self.exemplar_labels)} exemplars")
 
     def add(self) -> None:
         """Load data, assign a category to each question via assign_category, then call populate with this data."""

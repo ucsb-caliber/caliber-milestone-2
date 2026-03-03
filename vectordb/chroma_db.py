@@ -28,10 +28,14 @@ def get_chroma_client(persist_directory: str | None = None):
 class QuestionVectorDB:
     """ChromaDB-backed store for question embeddings keyed by question_id."""
 
-    def __init__(self, persist_directory: str | None = None) -> None:
+    def __init__(
+        self,
+        persist_directory: str | None = None,
+        collection_name: str | None = None,
+    ) -> None:
         self._client = get_chroma_client(persist_directory)
         self._collection = self._client.get_or_create_collection(
-            name=_COLLECTION_NAME,
+            name=collection_name or _COLLECTION_NAME,
             metadata={"hnsw:space": "cosine"},
         )
 

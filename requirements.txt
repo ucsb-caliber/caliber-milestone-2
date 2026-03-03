@@ -39,7 +39,8 @@ yacs==0.1.8
 # LLM / API / Embeddings
 # ---------------------------
 openai==2.15.0
-FlagEmbedding>=1.2.0
+FlagEmbedding==1.3.2
+transformers==4.44.2
 
 # ---------------------------
 # Database
@@ -72,4 +73,3 @@ cloudpickle==3.0.0
 fastapi
 uvicorn[standard]
 python-multipart
-

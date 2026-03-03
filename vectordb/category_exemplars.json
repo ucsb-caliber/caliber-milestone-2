@@ -1,0 +1,55 @@
+{
+  "schema_version": "1.0",
+  "exemplars": [
+    {
+      "id": "ex_algo_big_o_1",
+      "category": "Algorithm analysis",
+      "text": "Give the worst-case runtime of Kruskal's algorithm and explain your reasoning."
+    },
+    {
+      "id": "ex_algo_graph_1",
+      "category": "Algorithm analysis",
+      "text": "Design an algorithm for shortest paths and analyze its time complexity."
+    },
+    {
+      "id": "ex_ds_bst_1",
+      "category": "Data structures",
+      "text": "In a binary search tree, return all keys in a range [k1, k2] in sorted order."
+    },
+    {
+      "id": "ex_ds_stack_1",
+      "category": "Data structures",
+      "text": "Use one additional stack to sort a stack in ascending order."
+    },
+    {
+      "id": "ex_prog_loops_1",
+      "category": "Programming logic",
+      "text": "Explain the difference between a for-each loop and a while loop."
+    },
+    {
+      "id": "ex_prog_list_1",
+      "category": "Programming logic",
+      "text": "Which of the following is a list method: union, extend, keyerror, add, concatenate?"
+    },
+    {
+      "id": "ex_oop_class_1",
+      "category": "Object oriented programming",
+      "text": "Write a class that inherits from another class and adds a new boolean attribute."
+    },
+    {
+      "id": "ex_oop_init_1",
+      "category": "Object oriented programming",
+      "text": "Implement a class constructor that initializes inherited and custom fields."
+    },
+    {
+      "id": "ex_recursion_reverse_1",
+      "category": "Recursion",
+      "text": "Write a recursive function that reverses a string."
+    },
+    {
+      "id": "ex_recursion_decompose_1",
+      "category": "Recursion",
+      "text": "Solve the problem recursively by reducing input size and defining a base case."
+    }
+  ]
+}

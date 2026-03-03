@@ -3,6 +3,9 @@
 ## **Overview**
 
 The **Vector DB workflow** is a modular framework designed to assign categories to computer science questions.
+It supports two retrieval sources:
+- live questions already stored in SQL+Chroma
+- preset tagged exemplars for cold-start tagging
 
 ---
 
@@ -32,6 +35,7 @@ The **Workflow Manager** acts as the central control unit for the vector databas
 | `get_category()` | Gets the category for a question id|
 | `get_embedding()` | Converts the input question text into a word embedding|
 | `assign_category()` | Assigns a category to an input question |
+| `_load_exemplars()` | Loads preset tagged exemplars into a separate Chroma collection |
 | `add()` | Takes in questions without categories as input, gets categories for each question, then calls populate |
 | `populate_sql()` | Populates the SQL database |
 | `populate_chroma()` | Populates the vector database |
@@ -55,5 +59,4 @@ Sets up the SQL database.
 Models for the SQL database.
 
 ---
-
 
