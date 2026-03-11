@@ -1,0 +1,125 @@
+[
+  {
+    "original_id": "q_efb3d9c130f9a368",
+    "type": "FREE_RESPONSE",
+    "question": "What is the difference between '10' and 10 in Python?",
+    "options": null,
+    "answer": "'10' is a string representing the number ten, while 10 is an integer value."
+  },
+  {
+    "original_id": "q_46d9959229dd5723",
+    "type": "FREE_RESPONSE",
+    "question": "Question 3\nName at least three different sequences. How do they differ?\nThere are many possible responses here, but you might have listed strings, lists, or tuples.",
+    "options": null,
+    "answer": "Correct answer: \n1. String: A sequence of characters enclosed in quotes (either single ' or double \"). It is immutable, meaning once created, its content cannot be changed.\n2. List: A collection of items (elements) that can be of different types and are ordered. Lists are mutable, allowing elements to be added, removed, or modified.\n3. Tuple: Similar to a list but immutable. Once a tuple is created, its elements cannot be changed. Tuples are useful for storing data that should not change throughout the program."
+  },
+  {
+    "original_id": "q_f611c88f613b8e41",
+    "type": "MCQ",
+    "question": "Which of the following is a list method?",
+    "options": {
+      "1": "union",
+      "2": "extend",
+      "3": "keyerror",
+      "4": "add",
+      "5": "concatenate"
+    },
+    "answer": "2"
+  },
+  {
+    "original_id": "q_4c12d492d6b7cdaf",
+    "type": "FREE_RESPONSE",
+    "question": "Why is it crucial to close a file after you have finished working with it?",
+    "options": null,
+    "answer": "Closing a file when done is essential for performance reasons. It allows the system to free up resources, such as memory and disk space, that were allocated to the file. Additionally, closing files ensures data integrity by flushing any buffered changes to the storage device, preventing data corruption."
+  },
+  {
+    "original_id": "q_c40ad828cea8a3e4",
+    "type": "FREE_RESPONSE",
+    "question": "What is the difference between a for-each and a while loop? Consider when each type of loop might be more appropriate to use in different scenarios.",
+    "options": null,
+    "answer": "A for-each loop is used when you want to iterate over each element in an array or collection, without needing to know the index. It simplifies the code by abstracting away the iteration logic. A while loop, on the other hand, is used when you need more control over the loop's execution, such as when you don't know how many times the loop will run or when you want to perform a condition check before each iteration."
+  },
+  {
+    "original_id": "q_4877eeb20a1df686",
+    "type": "FREE_RESPONSE",
+    "question": "Write a function `is_close_far()` that accepts three integers `x`, `y`, and `z` as arguments. Return `True` if one of `y` or `z` is 'near' (differing from `x` by at most 2), while the other is 'far', differing from both other values by 3 or more.",
+    "options": null,
+    "answer": "def is_close_far(x, y, z):\\n    cond1 = abs(x-y) <= 2 and abs(y-z) >= 3 and abs(x-z) >= 3\\n    cond2 = abs(x-z) <= 2 and abs(x-y) >= 3 and abs(z-y) >= 3\\n    return cond1 or cond2"
+  },
+  {
+    "original_id": "q_12faaf2dafb05cb9",
+    "type": "FREE_RESPONSE",
+    "question": "Write a function `sum_without_thirties(x, y, z)` that returns the sum of three integers `x`, `y`, and `z`. However, do not include any integer as part of the sum if it is within the range [30, 39] (inclusive).",
+    "options": null,
+    "answer": "def sum_without_thirties(x, y, z):\\n    nums = [x, y, z]\\n    total_sum = 0\\n    for num in nums:\\n        if not is_thirty_something(num):\\n            total_sum += num\\n    return total_sum\\n\\ndef is_thirty_something(num):\\n    return 30 <= num <= 39"
+  },
+  {
+    "original_id": "q_921d26c8d17b6950",
+    "type": "MCQ",
+    "question": "Which of the following functions correctly calculates the number of positions where two strings contain the same substring of length 2?",
+    "options": {
+      "A": "def get_substring_positions(a, b): min_length = min(len(a), len(b)) count = 0 for i in range(min_length-1): if a[i:i+2] == b[i:i+2]: count += 1 return count",
+      "B": "def get_substring_positions(a, b): min_length = min(len(a), len(b)) count = 0 for i in range(min_length-1): if a[i:i+2] != b[i:i+2]: count += 1 return count",
+      "C": "def get_substring_positions(a, b): min_length = max(len(a), len(b)) count = 0 for i in range(min_length-1): if a[i:i+2] == b[i:i+2]: count += 1 return count",
+      "D": "def get_substring_positions(a, b): min_length = min(len(a), len(b)) count = 0 for i in range(min_length-1): if a[i:i+2] > b[i:i+2]: count += 1 return count"
+    },
+    "answer": "A"
+  },
+  {
+    "original_id": "q_d98d1753af95dee0",
+    "type": "FREE_RESPONSE",
+    "question": "Question 10\nWrite a function `find_common_elements()` that takes in two sets and returns a new set containing the elements that are common to both sets. If 'error' is one of the elements, remove it from the new set before returning it.\nFor example,\n`find_common_elements({'error', 'data', 'model'}, {'data', 'error', 'accuracy'})` should evaluate to `{'data'}.`\ndef find_common_elements(set1, set2): return - {'error'}\n",
+    "options": null,
+    "answer": "def find_common_elements(set1, set2):\n    common_elements = set1.intersection(set2)\n    if 'error' in common_elements:\n        common_elements.remove('error')\n    return common_elements"
+  },
+  {
+    "original_id": "q_105a7e6eab6052af",
+    "type": "FREE_RESPONSE",
+    "question": "Write a class named Book that represents each book in a library. Each book has the following attributes: \n\n* title: the title of the book. \n* author: the author of the book. \n* content: a string representing the text of the book. Each page is separated by the \u2018\n\u2019 character. \n\nThe Book class should have an initializer that accepts the book\u2019s title, author, and content as arguments. These values should be assigned to the object\u2019s respective attributes. \n\nThe class should also have the following methods: \n\n* read(): takes in a page number, and prints out the content of each page starting from the beginning until the given page number is reached. \n* __str__(): return a string describing this book in terms of its name and author (e.g., \"Adventures of Huckleberry Finn by Mark Twain\"). \n\nOn the exam, you will have example test cases. These questions were meant to get you thinking about what those test cases would be (to help prepare you for hidden tests, and for general practice with computational thinking). You could have included more error-checking here (for example, checking whether the page number is valid), but this is an acceptable solution.",
+    "options": null,
+    "answer": "class Book:\n    def __init__(self, title, author, content):\n        self.title = title\n        self.author = author\n        self.content = content\n\n    def read(self, page):\n        pages = self.content.split('\n')\n        for i in range(0, page-1):\n            print(pages[i])\n\n    def __str__(self):\n        return self.title + ' by ' + self.author"
+  },
+  {
+    "original_id": "q_47199f87f221055c",
+    "type": "FREE_RESPONSE",
+    "question": "Question 13\nWrite a class named FictionBook that inherits the Book class from the previous question. A FictionBook should have an additional string attribute genre that indicates the genre of the fiction book (e.g., 'fantasy', 'mystery'). The value of this attribute should be able to be set when initialized.\n\nclass FictionBook:\ndef __init__(self, title, author, content, genre):\nsuper().__init__(title, author, content)\nself.genre = genre",
+    "options": null,
+    "answer": "class FictionBook(Book):\ndef __init__(self, title, author, content, genre):\nsuper().__init__(title, author, content)\nself.genre = genre"
+  },
+  {
+    "original_id": "q_d8f4ba3ee4de7d8a",
+    "type": "FREE_RESPONSE",
+    "question": "Question 13\nWrite a class named SchoolEmployee. Each SchoolEmployee has the following attributes:\n- name: the name of the employee.\n- subjects: a set of this employee\u2019s favorite Subjects (or Courses).\n- num_breaks: an integer representing how many breaks this employee has taken today. This value should begin at zero when a SchoolEmployee is initialized.\n\nThe SchoolEmployee class should have an initializer that accepts the employee\u2019s name and subjects as arguments. These values should be assigned to the object\u2019s respective attributes. Additionally, the SchoolEmployee class should have the following methods:\n- take_break(): takes in an integer num, and increases this SchoolEmployee\u2019s num_breaks attribute by that integer.\n- announce_lunchtime(): takes in an integer num_groups, and prints out \u201cLunch time!\u201d that many times. Also, takes a break for each group announced.\n- __str__() : return the SchoolEmployee\u2019s name.\n\nImplement the SchoolEmployee class according to the specifications above.",
+    "options": null,
+    "answer": "class SchoolEmployee:\n    def __init__(self, name, subjects):\n        self.name = name\n        self.subjects = subjects\n        self.num_breaks = 0\n\n    def take_break(self, num):\n        self.num_breaks += num\n\n    def announce_lunchtime(self, num_groups):\n        for i in range(num_groups):\n            print(\"Lunch time!\")\n            self.take_break(1)\n\n    def __str__(self):\n        return self.name"
+  },
+  {
+    "original_id": "q_a60cd9280120b857",
+    "type": "FREE_RESPONSE",
+    "question": "Question 15\nWrite a class named School. A school has the following attributes:\n- name: the name of this school.\n- teachers: a list of Teacher objects that work at the school.\n- students: a dictionary that contains Student objects as keys. The value paired with each key is either an empty string, or a string representing the name of a student who has borrowed a book from the library.\nThe School class should have an initializer that MAY accept teachers and students as arguments, but doesn\u2019t have to do so. If provided, these values should be assigned to the object\u2019s respective attributes. If not provided, teachers and students should begin as an empty list and dictionary, respectively. The value for the name attribute is always provided.\nThe class should also have the following methods:\n- hire_teacher(): takes in a new Teacher object, and adds it to this school\u2019s list of teachers.\n- add_student(): takes in a new Student object, and adds it to this school\u2019s students (unless the school already has this student). If the school already has the student, print out the name of the school followed by \u201c already has this student!\u201d. \n- borrow_book(): takes in a Student and a book title. If this student is in the dictionary of students, change the value at that key in the students dictionary to the book title. Otherwise, print out \u201cSorry, we don\u2019t have \u201d followed by the name of the student and a period.\n- return_book(): takes in a Student. If this student is in the dictionary of students, change the value at that key in the students dictionary to an empty string. Otherwise, print out \u201cSorry, wrong school.\u201d.\n- __str__() : return the name of the school.\nclass School: def __init__(self, name, teachers=[], students={}): self.name = name self.teachers = teachers self.students = students def hire_teacher(self, teacher): self.teachers.append(teacher) def add_student(self, student): if student in self.students: print(self.name + ",
+    "options": null,
+    "answer": "None"
+  },
+  {
+    "original_id": "q_691569a962b27f05",
+    "type": "FREE_RESPONSE",
+    "question": "Consider the sequence 5, 10, 30, 90, 270, 810, 2430... Write a recursive function next_num(n) that calculates the nth number of the sequence.",
+    "options": null,
+    "answer": "def next_num(n): if n == 1: return 5 elif n == 2: return 10 else: return next_num(n-1) * next_num(n-2)"
+  },
+  {
+    "original_id": "q_ea1eed8b0d97f18e",
+    "type": "FREE_RESPONSE",
+    "question": "Question 18\nWrite a recursive function find_min() that takes in a list parameter and returns the smallest number in the list. Hint: remember that you can use the built-in function min().\ndef find_min(my_list): if len(my_list) == 1: return my_list[0] else: return min(my_list[0], find_min(my_list[1:]))",
+    "options": null,
+    "answer": "def find_min(my_list):\n    if len(my_list) == 1:\n        return my_list[0]\n    else:\n        return min(my_list[0], find_min(my_list[1:]))"
+  },
+  {
+    "original_id": "q_be7bce99d3001b67",
+    "type": "FREE_RESPONSE",
+    "question": "Question 19\nWrite a recursive function `sort_by_type()` that takes in a single list of mixed data types as a parameter. It should separate the integers from other data types so that all integers are together at the beginning of the list, and all non-integer values are together at the end of the list. This \u201cseparated\u201d list is what should be returned.\n\nprint(sort_by_type([1, 'a', 3, 7, 'b', 2, 4])) result in something like: [1, 3, 7, 4, 2, 'a', 'b']\ndef sort_by_type(data):\n    if len(data) == 0:\n        return []\n    # integers\n    if isinstance(data[0], int):\n        return data[0:1] + sort_by_type(data[1:])\n    else:\n        return sort_by_type(data[1:]) + data[0:1]\n\nFor example,\nreturn sort_by_type(data[1:]) + data[0:1]",
+    "options": null,
+    "answer": "def sort_by_type(data):\n    if len(data) == 0:\n        return []\n    # integers\n    if isinstance(data[0], int):\n        return [data[0]] + sort_by_type(data[1:])\n    else:\n        return sort_by_type(data[1:]) + [data[0]]"
+  }
+]
