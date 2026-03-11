@@ -1,0 +1,295 @@
+
+# Backlog Item: AI Rubric-Based Grading (LLM Assisted)
+
+# User Story
+
+As an **instructor**, I want Caliber to **automatically grade open-ended responses using a structured rubric**, so that qualitative answers can be evaluated consistently while reducing manual grading time.
+
+----------
+
+# Problem
+
+Many assignments include **open-ended responses** such as:
+
+-   short answer explanations
+    
+-   algorithm reasoning
+    
+-   design justification
+    
+-   debugging explanations
+    
+
+These responses are difficult to autograde. Manual grading is:
+
+-   time-consuming
+    
+-   inconsistent across graders
+    
+-   difficult to scale in large courses
+    
+
+LLM-assisted grading can evaluate responses against **clearly defined rubric criteria** and produce **structured scoring with feedback**, while still allowing instructor review.
+
+----------
+
+# Inputs
+
+Instructor provides:
+
+-   question prompt
+    
+-   rubric criteria
+    
+-   point allocation
+    
+-   optional reference answer
+    
+
+Example rubric:
+
+Criterion
+
+Description
+
+Points
+
+Algorithm correctness
+
+Correct algorithm is identified and explained
+
+4
+
+Complexity analysis
+
+Time or space complexity correctly described
+
+3
+
+Explanation clarity
+
+Explanation is logically structured and understandable
+
+2
+
+Edge cases
+
+Important edge cases discussed
+
+1
+
+Total: **10 points**
+
+----------
+
+# AI Grading Pipeline
+
+For each student submission:
+
+1.  Retrieve **rubric criteria**
+    
+2.  Pass rubric + student response to LLM
+    
+3.  Evaluate each rubric criterion independently
+    
+4.  Assign score per criterion
+    
+5.  Generate structured feedback
+    
+6.  Return suggested grade to instructor
+    
+
+Example output:
+
+```json
+{
+ "score": 7,
+ "breakdown": {
+   "algorithm_correctness": 4,
+   "complexity_analysis": 2,
+   "clarity": 1,
+   "edge_cases": 0
+ },
+ "feedback": "The algorithm is correctly described, but complexity analysis is incomplete and no edge cases were mentioned."
+}
+
+```
+
+----------
+
+# Rubric Structure for Reliable AI Grading
+
+To ensure consistent grading, rubrics must follow **structured, machine-readable formats**.
+
+Each rubric criterion should include:
+
+-   **Criterion name**
+    
+-   **Explicit description**
+    
+-   **Scoring levels**
+    
+-   **Examples of correct and incorrect responses**
+    
+
+Example rubric schema:
+
+```json
+{
+ "criterion": "complexity_analysis",
+ "points": 3,
+ "description": "Student correctly explains the time complexity of the algorithm.",
+ "levels": [
+   {"score":3,"description":"Correct complexity and reasoning"},
+   {"score":2,"description":"Correct complexity but incomplete explanation"},
+   {"score":1,"description":"Incorrect complexity but some reasoning"},
+   {"score":0,"description":"No complexity discussion"}
+ ]
+}
+
+```
+
+This structure helps the LLM **reason step-by-step** rather than making a vague judgment.
+
+----------
+
+# Fairness and Reliability Safeguards
+
+To ensure fairness and avoid inconsistent grading, the system should implement the following safeguards.
+
+### Deterministic Grading
+
+-   Use **temperature = 0** for grading prompts
+    
+-   Require **structured JSON output**
+    
+-   Evaluate rubric criteria **independently**
+    
+
+----------
+
+### Reference Answer Calibration
+
+Instructor can optionally provide:
+
+-   a **model solution**
+    
+-   examples of **high-quality answers**
+    
+-   examples of **low-quality answers**
+    
+
+These serve as **anchor examples** for the LLM.
+
+----------
+
+### Double-Grading (Optional)
+
+To reduce variance:
+
+-   run **two independent LLM evaluations**
+    
+-   compare results
+    
+-   flag discrepancies for instructor review
+    
+
+----------
+
+### Confidence Score
+
+The system should produce a **confidence metric** for each grading result.
+
+Example:
+
+```
+confidence = agreement_between_evaluations
+
+```
+
+Low-confidence results can be flagged for manual grading.
+
+----------
+
+### Instructor Review Layer
+
+AI grading should produce **suggested scores only**.
+
+Instructor must be able to:
+
+-   review rubric breakdown
+    
+-   adjust scores
+    
+-   override grades
+    
+
+----------
+
+### Bias Mitigation
+
+To reduce bias:
+
+-   remove **student identifiers**
+    
+-   avoid demographic information
+    
+-   grade only based on answer content
+    
+
+----------
+
+# Instructor Workflow
+
+1.  Instructor creates open-ended question
+    
+2.  Defines **structured rubric**
+    
+3.  Students submit responses
+    
+4.  AI generates **rubric-based grading**
+    
+5.  Instructor reviews suggested grades
+    
+6.  Final grades stored
+    
+
+----------
+
+# Acceptance Criteria
+
+-   Instructor can define structured rubric criteria
+    
+-   AI generates rubric-aligned scoring
+    
+-   Feedback is produced per criterion
+    
+-   Instructor can override grades
+    
+-   System supports deterministic grading output
+    
+-   Low-confidence evaluations are flagged
+    
+
+----------
+
+# Non-Goals (Phase 1)
+
+-   fully autonomous grading without instructor oversight
+    
+-   grading long-form essays (>2000 words)
+    
+-   plagiarism detection
+    
+
+----------
+
+# Future Enhancements
+
+-   rubric learning from instructor corrections
+    
+-   cross-assignment grading calibration
+    
+-   concept-level misunderstanding detection
+    
+-   automated comment bank generation
