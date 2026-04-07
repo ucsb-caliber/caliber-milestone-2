@@ -22,20 +22,86 @@ OLLAMA_URL = "http://localhost:11434/api/chat"
 #
 # Set VISION_MODEL = None to disable vision entirely.
 #
-TEXT_MODEL   = "qwen2.5-coder:7b"   # ~4.5 GB Q4 — generation and verification
-VISION_MODEL = "moondream"          # ~1 GB Q4 — only for image-based questions
-# ─────────────────────────────────────────────────────────────────────
+TEXT_MODEL   = "qwen2.5-coder:7b"   # generation + verification (must follow JSON reliably)
+VISION_MODEL = "moondream"          # NOT used for JSON generation — too small / wrong modality
 
 DEBUG = False
 MAX_RETRIES = 3
 BASE_TEMPERATURE = 0.4
 SIMILARITY_THRESHOLD = 0.6
 
+# ── Algorithm extraction ─────────────────────────────────────────────
+# Keyword-based detection of the core algorithmic concept.
+# Used to tell the generator which structure must be preserved.
+_ALGORITHM_PATTERNS = [
+    ("hash map lookup",     ["hash", "dictionary", "dict", "lookup", "two sum", "key", "mapping"]),
+    ("graph traversal",     ["graph", "bfs", "dfs", "breadth", "depth", "adjacen", "vertex", "edge", "shortest path", "dijkstra", "spanning tree", "kruskal"]),
+    ("dynamic programming", ["dynamic programming", "memoiz", "tabulation", "subproblem", "overlapping", "optimal substructure", "longest common", "knapsack"]),
+    ("sorting / ordering",  ["sort", "order", "rank", "arrange", "ascending", "descending", "merge sort", "quicksort", "bubble"]),
+    ("binary search",       ["binary search", "bisect", "sorted array", "log n", "divide and conquer"]),
+    ("recursion",           ["recurs", "base case", "recursive"]),
+    ("tree traversal",      ["tree", "preorder", "inorder", "postorder", "binary tree", "bst", "traversal"]),
+    ("linked list",         ["linked list", "singly linked", "head", "node", "next pointer", "reverse"]),
+    ("stack / queue",       ["stack", "queue", "push", "pop", "peek", "fifo", "lifo"]),
+    ("set operations",      ["set", "intersection", "union", "difference", "common elements"]),
+    ("string manipulation", ["string", "substring", "reverse", "palindrome", "anagram", "character"]),
+    ("array search",        ["array", "list", "find", "search", "index", "element"]),
+    ("greedy",              ["greedy", "optimal", "locally optimal"]),
+    ("class design / OOP",  ["class", "inherit", "object", "method", "__init__", "__str__", "attribute"]),
+]
+
+
+def extract_algorithm(text):
+    t = text.lower()
+    matches = []
+    for algo_name, keywords in _ALGORITHM_PATTERNS:
+        score = sum(1 for kw in keywords if kw in t)
+        if score > 0:
+            matches.append((algo_name, score))
+    if not matches:
+        return "general problem solving"
+    matches.sort(key=lambda x: x[1], reverse=True)
+    return matches[0][0]
+
+
+# ── Scenario domains ─────────────────────────────────────────────────
+# Aligned with backlog spec: logistics, finance, healthcare, robotics,
+# social networks, cybersecurity, e-commerce — plus extras.
 THEMATIC_RESKINS = [
     {
-        "theme": "Warehouse & Shipping",
+        "theme": "Logistics & Shipping",
         "swap_nouns": "packages, crates, shipments, pallets, delivery trucks, warehouses, weight limits",
         "example": "Two Sum → find two packages whose weights add up to the truck's capacity",
+    },
+    {
+        "theme": "Finance & Banking",
+        "swap_nouns": "transactions, accounts, balances, transfers, interest rates, portfolios, deposits",
+        "example": "sum → calculate total deposits; search → find a fraudulent transaction",
+    },
+    {
+        "theme": "Healthcare & Patient Records",
+        "swap_nouns": "patients, doctors, appointments, medications, dosages, rooms, wait times",
+        "example": "priority queue → triage patients by severity; scheduling → assign time slots",
+    },
+    {
+        "theme": "Robotics & Automation",
+        "swap_nouns": "robots, sensors, waypoints, motor speeds, task queues, coordinates, battery levels",
+        "example": "graph → plan robot's path through waypoints; queue → process sensor readings in order",
+    },
+    {
+        "theme": "Social Network",
+        "swap_nouns": "users, friend lists, posts, likes, followers, messages, notifications",
+        "example": "graph → mutual friends; set operations → common followers between two users",
+    },
+    {
+        "theme": "Cybersecurity",
+        "swap_nouns": "login attempts, IP addresses, access logs, threat scores, firewall rules, permissions, tokens",
+        "example": "search → find suspicious IP; filtering → block IPs that exceed failed login threshold",
+    },
+    {
+        "theme": "E-Commerce",
+        "swap_nouns": "products, prices, stock counts, shopping carts, discounts, categories, customer orders",
+        "example": "filtering → remove out-of-stock items; sum → calculate cart total with discounts",
     },
     {
         "theme": "Recipe & Cooking",
@@ -58,34 +124,14 @@ THEMATIC_RESKINS = [
         "example": "graph traversal → find shortest route; DP → cheapest sequence of flights",
     },
     {
-        "theme": "Bookstore & Library",
-        "swap_nouns": "books, authors, shelves, borrowers, due dates, genres, page counts",
-        "example": "set intersection → books in common between two readers' lists",
-    },
-    {
-        "theme": "School & Grades",
-        "swap_nouns": "students, courses, grades, assignments, GPAs, semesters, classrooms",
-        "example": "dictionary → student grade lookup; sorting → rank students by GPA",
-    },
-    {
-        "theme": "Inventory & Retail",
-        "swap_nouns": "products, prices, stock counts, shopping carts, discounts, categories, receipts",
-        "example": "filtering → remove out-of-stock items; sum → calculate cart total",
-    },
-    {
         "theme": "File System & Documents",
         "swap_nouns": "files, folders, file sizes, extensions, paths, permissions, timestamps",
         "example": "tree traversal → list all files in nested folders; search → find a file by name",
     },
     {
-        "theme": "Social Network",
-        "swap_nouns": "users, friend lists, posts, likes, followers, messages, notifications",
-        "example": "graph → mutual friends; set operations → common followers between two users",
-    },
-    {
-        "theme": "Hospital & Patients",
-        "swap_nouns": "patients, doctors, appointments, medications, dosages, rooms, wait times",
-        "example": "priority queue → triage patients by severity; scheduling → assign time slots",
+        "theme": "School & Grades",
+        "swap_nouns": "students, courses, grades, assignments, GPAs, semesters, classrooms",
+        "example": "dictionary → student grade lookup; sorting → rank students by GPA",
     },
     {
         "theme": "Parking Lot",
@@ -148,7 +194,11 @@ def encode_image(path):
         return base64.b64encode(f.read()).decode("utf-8")
 
 
+_ollama_reachable = None
+
 def call_ollama(prompt, model, images=None, temperature=None):
+    global _ollama_reachable
+
     if DEBUG:
         print(f"\n[DEBUG] Calling model: {model}")
 
@@ -163,22 +213,33 @@ def call_ollama(prompt, model, images=None, temperature=None):
     try:
         response = requests.post(OLLAMA_URL, json=payload, timeout=120)
         response.raise_for_status()
+        _ollama_reachable = True
         content = response.json()["message"]["content"]
 
         if DEBUG:
             print(f"[DEBUG] Raw response: {content}")
 
         return json.loads(content)
+    except requests.ConnectionError:
+        if _ollama_reachable is None:
+            print(f"\n  ERROR: Cannot connect to Ollama at {OLLAMA_URL}")
+            print(f"  Is Ollama running?  Try: ollama serve")
+            _ollama_reachable = False
+        return None
     except requests.Timeout:
-        print("  Request timed out.")
+        print("  Request timed out (120s).")
+        return None
+    except requests.HTTPError as e:
+        status = e.response.status_code if e.response is not None else "?"
+        print(f"  Ollama returned HTTP {status}: {e}")
         return None
     except json.JSONDecodeError as e:
+        print(f"  Model returned invalid JSON: {e}")
         if DEBUG:
-            print(f"[DEBUG] JSON parse error: {e}")
+            print(f"[DEBUG] Raw content was: {content}")
         return None
     except Exception as e:
-        if DEBUG:
-            print(f"[DEBUG] API error: {e}")
+        print(f"  Unexpected error: {type(e).__name__}: {e}")
         return None
 
 
@@ -199,13 +260,35 @@ def should_skip_question(text):
     return any(trigger in t for trigger in junk_triggers)
 
 
+def _is_code_or_written_answer_question(text):
+    """Coding / written exam items: OCR text is authoritative; skip vision for generation."""
+    t = text.lower()
+    return any(
+        p in t
+        for p in (
+            "write a function",
+            "write a class",
+            "write pseudocode",
+            "recursive function",
+            "def ",
+            "__init__",
+            "class named",
+            "inherits",
+        )
+    )
+
+
 def should_use_vision(q_data):
+    """Whether we may attach an image to the *text* model (if it supports vision)."""
     if not VISION_MODEL:
         return False
 
     text = q_data.get("text", "")
     images = q_data.get("image_crops", [])
     if not images:
+        return False
+
+    if _is_code_or_written_answer_question(text):
         return False
 
     vision_keywords = [
@@ -227,6 +310,10 @@ def should_use_vision(q_data):
     return True
 
 
+def text_model_supports_images():
+    return "vision" in TEXT_MODEL.lower()
+
+
 def detect_format(text):
     text_lower = text.lower()
     if "true" in text_lower and "false" in text_lower:
@@ -245,6 +332,49 @@ def is_too_similar(original_text, variant_text):
     return ratio > SIMILARITY_THRESHOLD
 
 
+_BAD_PLACEHOLDER_FRAGMENTS = (
+    "1-2 sentence real-world scenario",
+    "the full problem statement combining",
+    "the clear problem definition",
+    "any constraints or rules carried over",
+    "the complete correct answer",
+)
+
+
+def is_invalid_variant(variant, forced_type, expected_mcq_options):
+    """Reject models that echo JSON schema instructions or return garbage."""
+    vt = (variant.get("variant_text") or "").strip().lower()
+    if len(vt) < 40:
+        return "variant_text too short"
+
+    for frag in _BAD_PLACEHOLDER_FRAGMENTS:
+        if frag in vt:
+            return f"placeholder text in variant_text: {frag[:40]}"
+
+    for field in ("storyline", "task"):
+        val = (variant.get(field) or "").strip().lower()
+        for frag in _BAD_PLACEHOLDER_FRAGMENTS:
+            if frag in val:
+                return f"placeholder in {field}"
+
+    ca = variant.get("correct_answer")
+    if isinstance(ca, (list, dict)):
+        return "correct_answer is not a string"
+
+    if forced_type == "MCQ":
+        opts = variant.get("options")
+        if not opts or not isinstance(opts, dict):
+            return "MCQ missing or invalid options"
+        n = len(opts)
+        if expected_mcq_options >= 2 and n != expected_mcq_options:
+            return f"expected {expected_mcq_options} MCQ options, got {n}"
+        vals = [str(v).strip() for v in opts.values()]
+        if vals and all(re.match(r"^0\.\d+$", v) for v in vals if v):
+            return "MCQ options look like garbage probabilities"
+
+    return None
+
+
 def normalize_answer(ans):
     s = str(ans).strip().upper()
     if s in ["TRUE", "T", "YES"]:
@@ -258,7 +388,15 @@ def normalize_answer(ans):
     return mapping.get(val, val)
 
 
-def _build_generation_prompt(original_text, forced_type, scenario):
+def _count_options(text):
+    """Count how many MCQ options appear in the original question text."""
+    letter_opts = re.findall(r"(?:^|\n|\s)[A-E][\.\)]\s", text)
+    num_opts = re.findall(r"(?:^|\n|\s)[1-5][\.\)]\s", text)
+    count = max(len(letter_opts), len(num_opts))
+    return count if count >= 2 else 0
+
+
+def _build_generation_prompt(original_text, forced_type, scenario, algorithm):
     style = scenario.get("style", "reskin")
 
     if style == "swe":
@@ -279,29 +417,64 @@ nouns/numbers with concrete, tangible things from the theme. Think of it like a 
 reskin: "find two numbers that sum to target" becomes "find two packages whose weights
 add up to the truck's capacity"."""
 
+    format_rules = ""
+    if forced_type == "MCQ":
+        n_opts = _count_options(original_text) or 4
+        format_rules = f"""
+FORMAT CONSTRAINTS (MCQ):
+- Keep the EXACT same question direction. If the original asks "which IS", ask "which IS".
+  If it asks "which is NOT", ask "which is NOT". Do NOT flip it.
+- Produce exactly {n_opts} options, labeled with the same scheme as the original.
+- The options must test the same KIND of knowledge (e.g., if the original lists Python
+  methods, the variant must also list Python methods — just for a different type/context).
+- One option must be clearly correct; the distractors should be plausible but wrong."""
+    elif forced_type == "TRUE_FALSE":
+        format_rules = """
+FORMAT CONSTRAINTS (TRUE/FALSE):
+- The statement must be clearly true or false with no ambiguity.
+- Keep the same truth value as the original if possible."""
+    else:
+        format_rules = """
+FORMAT CONSTRAINTS (FREE RESPONSE):
+- If the original asks to write a function, the variant must ask to write a function.
+- If the original asks to write a class, the variant must ask to write a class.
+- If the original asks for an explanation, the variant must ask for an explanation.
+- Preserve the same level of detail expected in the answer."""
+
     return f"""You are creating a variant of a CS exam question. The variant should feel like a
 concrete, real-world scenario — not an abstract math or textbook exercise.
 
 ORIGINAL QUESTION:
 \"\"\"{original_text}\"\"\"
 
+CORE ALGORITHM: {algorithm}
+This algorithmic structure MUST be preserved in the variant. Do not change what kind of
+algorithm is needed to solve it.
+
 {context_block}
+{format_rules}
 
-RULES:
-1. Test the SAME concept and difficulty as the original.
-2. Replace generic variables (x, y, n, a, b) with descriptive names from the theme.
-3. The problem should read like a real situation someone might actually encounter.
-4. If the original has code, the variant must too — use fitting function/class names.
-5. You MUST produce a "{forced_type}" question.
-6. The correct_answer must be complete and correct.
+STRUCTURAL RULES:
+1. The variant must test the SAME concept, at the SAME difficulty, using the SAME question
+   format as the original. Only the theme/nouns/values change.
+2. The underlying algorithm ({algorithm}) must remain the same.
+3. Replace generic variables (x, y, n, a, b) with descriptive names from the theme.
+4. The problem should read like a real situation someone might actually encounter.
+5. If the original has code, the variant must too — use fitting function/class names.
+6. You MUST produce a "{forced_type}" question.
 7. Do NOT mention the original question or call this a "variant".
+8. NEVER paste schema instructions into fields. Every string field must be real exam prose
+   a student would read — not phrases like "1-2 sentence scenario" or "full problem statement".
 
-OUTPUT JSON:
+OUTPUT JSON (shape only — replace values with your own complete text):
 {{
     "type": "{forced_type}",
-    "variant_text": "the full problem statement with the new theme/scenario",
+    "storyline": "<brief real-world hook, 1-2 sentences>",
+    "task": "<what the student must compute or implement>",
+    "constraints": "<rules from the original, or empty string>",
+    "variant_text": "<entire question: hook + task + constraints; coherent and self-contained>",
     "options": {{"A": "...", "B": "...", ...}} or null,
-    "correct_answer": "the complete correct answer"
+    "correct_answer": "<single correct answer string>"
 }}"""
 
 
@@ -322,8 +495,8 @@ OUTPUT JSON:
     "final_answer": "..."
 }}"""
 
-    return f"""You are verifying a practice problem. First solve it yourself, then check
-whether the claimed answer is correct.
+    return f"""You are verifying a practice problem. First judge if the question is valid,
+then solve it if it is, and check whether the claimed answer is correct.
 
 Question:
 \"\"\"{variant_text}\"\"\"
@@ -331,7 +504,15 @@ Question:
 Claimed correct answer:
 \"\"\"{claimed_answer}\"\"\"
 
-STEPS:
+INVALID QUESTION — set claimed_answer_is_correct to false if ANY apply:
+- The question contains template/placeholder phrases (e.g. instructions meant for the author,
+  not the student), garbled code, or is incoherent.
+- The question does not ask for a clear programming task when it should (e.g. nonsense numbers
+  instead of code).
+- The claimed answer is not a plausible answer type for the question (e.g. a bare list of
+  decimals for a coding problem).
+
+STEPS (if the question is valid):
 1. Solve the question yourself. Show your reasoning.
 2. Compare your solution to the claimed answer.
 3. They do NOT need to be identical — just logically equivalent.
@@ -368,15 +549,24 @@ def generate_variant(index, db_path=None):
         return None
 
     use_vision = should_use_vision(q)
-    gen_model = VISION_MODEL if use_vision else TEXT_MODEL
+    gen_model = TEXT_MODEL
     images = []
-    if use_vision and q.get("image_crops"):
+    if use_vision and text_model_supports_images() and q.get("image_crops"):
         img = encode_image(q["image_crops"][0])
         if img:
             images = [img]
+    elif use_vision and not text_model_supports_images() and DEBUG:
+        print(
+            "[DEBUG] Vision-eligible question but TEXT_MODEL has no vision; "
+            "generating from OCR text only."
+        )
 
     forced_type = detect_format(q.get("text", ""))
-    print(f"Format: {forced_type} | Gen Model: {gen_model}")
+    algorithm = extract_algorithm(q.get("text", ""))
+    expected_mcq_options = _count_options(q.get("text", ""))
+    if forced_type == "MCQ" and expected_mcq_options < 2:
+        expected_mcq_options = 4
+    print(f"Format: {forced_type} | Algorithm: {algorithm} | Gen Model: {gen_model}")
 
     for attempt in range(1, MAX_RETRIES + 1):
         temperature = BASE_TEMPERATURE + (attempt - 1) * 0.15
@@ -387,10 +577,15 @@ def generate_variant(index, db_path=None):
         print(f"  Scenario: {label} ({scenario['style']})")
 
         # --- Call 1: Generate the variant ---
-        gen_prompt = _build_generation_prompt(q["text"], forced_type, scenario)
+        gen_prompt = _build_generation_prompt(q["text"], forced_type, scenario, algorithm)
         variant = call_ollama(gen_prompt, gen_model, images, temperature=temperature)
         if not variant or "variant_text" not in variant:
             print("  Generation returned null or missing variant_text.")
+            continue
+
+        bad = is_invalid_variant(variant, forced_type, expected_mcq_options)
+        if bad:
+            print(f"  Invalid variant: {bad}")
             continue
 
         if DEBUG:
@@ -440,6 +635,10 @@ def generate_variant(index, db_path=None):
             return {
                 "original_id": q.get("question_id"),
                 "type": forced_type,
+                "algorithm": algorithm,
+                "storyline": variant.get("storyline", ""),
+                "task": variant.get("task", ""),
+                "constraints": variant.get("constraints", ""),
                 "question": variant["variant_text"],
                 "options": variant.get("options"),
                 "answer": gen_ans,
