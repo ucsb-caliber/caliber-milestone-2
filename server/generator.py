@@ -5,6 +5,12 @@ import re
 import random
 from pathlib import Path
 from difflib import SequenceMatcher
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
 
 # config
 BASE_DIR = Path(__file__).parent.parent
@@ -22,13 +28,15 @@ OLLAMA_URL = "http://localhost:11434/api/chat"
 #
 # Set VISION_MODEL = None to disable vision entirely.
 #
-TEXT_MODEL   = "qwen2.5-coder:7b"   # generation + verification (must follow JSON reliably)
+TEXT_MODEL   = "qwen2.5-coder:14b"   # generation + verification (must follow JSON reliably)
 VISION_MODEL = "moondream"          # NOT used for JSON generation — too small / wrong modality
 
 DEBUG = False
 MAX_RETRIES = 3
 BASE_TEMPERATURE = 0.4
 SIMILARITY_THRESHOLD = 0.6
+# Explanation / "why" questions keep most of the stem; only the hook changes — allow higher overlap.
+SIMILARITY_THRESHOLD_EXPLANATION = 0.72
 
 # ── Algorithm extraction ─────────────────────────────────────────────
 # Keyword-based detection of the core algorithmic concept.
@@ -325,11 +333,31 @@ def detect_format(text):
     return "FREE_RESPONSE"
 
 
+def _similarity_threshold_for_original(original_text):
+    t = (original_text or "").lower()
+    if any(
+        k in t
+        for k in (
+            "explain ",
+            "why is it",
+            "why is ",
+            "important to ",
+            "difference between",
+            "what is the difference",
+            "name at least",
+            "how do they differ",
+        )
+    ):
+        return SIMILARITY_THRESHOLD_EXPLANATION
+    return SIMILARITY_THRESHOLD
+
+
 def is_too_similar(original_text, variant_text):
+    thresh = _similarity_threshold_for_original(original_text)
     ratio = SequenceMatcher(None, original_text.lower(), variant_text.lower()).ratio()
     if DEBUG:
-        print(f"[DEBUG] Similarity ratio: {ratio:.2f}")
-    return ratio > SIMILARITY_THRESHOLD
+        print(f"[DEBUG] Similarity ratio: {ratio:.2f} (threshold {thresh:.2f})")
+    return ratio > thresh
 
 
 _BAD_PLACEHOLDER_FRAGMENTS = (
@@ -339,6 +367,55 @@ _BAD_PLACEHOLDER_FRAGMENTS = (
     "any constraints or rules carried over",
     "the complete correct answer",
 )
+
+_META_ANSWER_SNIPPETS = (
+    "the correct answer should",
+    "the student should",
+    "your answer should be",
+    "acceptable responses",
+    "grading rubric",
+    "must be a function definition that",
+    "solution should use",
+)
+
+
+def _variant_asks_for_python_code(variant):
+    blob = " ".join(
+        str(variant.get(k) or "")
+        for k in ("variant_text", "task", "constraints")
+    ).lower()
+    return any(
+        p in blob
+        for p in (
+            "write a function",
+            "write a class",
+            "write pseudocode",
+            "recursive function",
+            "implement a function",
+            "define a function",
+        )
+    )
+
+
+def _free_response_correct_answer_invalid(correct_answer, variant):
+    if correct_answer is None:
+        ca = ""
+    elif isinstance(correct_answer, str):
+        ca = correct_answer.strip()
+    else:
+        ca = str(correct_answer).strip()
+    if not ca:
+        return "empty correct_answer"
+    ca_lower = ca.lower()
+    for frag in _META_ANSWER_SNIPPETS:
+        if frag in ca_lower:
+            return "correct_answer is meta/rubric, not a concrete solution"
+
+    if _variant_asks_for_python_code(variant):
+        if "def " not in ca and "class " not in ca_lower:
+            return "coding task requires correct_answer with Python (def or class)"
+
+    return None
 
 
 def is_invalid_variant(variant, forced_type, expected_mcq_options):
@@ -360,6 +437,13 @@ def is_invalid_variant(variant, forced_type, expected_mcq_options):
     ca = variant.get("correct_answer")
     if isinstance(ca, (list, dict)):
         return "correct_answer is not a string"
+    if ca is None:
+        ca = ""
+
+    if forced_type == "FREE_RESPONSE":
+        fr_err = _free_response_correct_answer_invalid(ca, variant)
+        if fr_err:
+            return fr_err
 
     if forced_type == "MCQ":
         opts = variant.get("options")
@@ -439,7 +523,12 @@ FORMAT CONSTRAINTS (FREE RESPONSE):
 - If the original asks to write a function, the variant must ask to write a function.
 - If the original asks to write a class, the variant must ask to write a class.
 - If the original asks for an explanation, the variant must ask for an explanation.
-- Preserve the same level of detail expected in the answer."""
+- Preserve the same level of detail expected in the answer.
+- correct_answer MUST be non-empty.
+- If the question asks for Python code, correct_answer must be actual Python (include def ... or class ...),
+  not a sentence about what the solution "should" do.
+- If the question asks for a prose explanation, correct_answer must be a concrete model answer (real sentences),
+  not grading instructions (never start with "The student should" or "The correct answer should")."""
 
     return f"""You are creating a variant of a CS exam question. The variant should feel like a
 concrete, real-world scenario — not an abstract math or textbook exercise.
@@ -511,6 +600,9 @@ INVALID QUESTION — set claimed_answer_is_correct to false if ANY apply:
   instead of code).
 - The claimed answer is not a plausible answer type for the question (e.g. a bare list of
   decimals for a coding problem).
+- The claimed answer is a rubric or author note ("The correct answer should...", "The student should...",
+  "must be a function that...") instead of the actual code or model prose the student would submit.
+- The question requires Python code but the claimed answer has no def/class and is only prose.
 
 STEPS (if the question is valid):
 1. Solve the question yourself. Show your reasoning.
@@ -591,13 +683,19 @@ def generate_variant(index, db_path=None):
         if DEBUG:
             print(f"[DEBUG] Variant text: {variant.get('variant_text')}")
 
+        sim_thresh = _similarity_threshold_for_original(q["text"])
         if is_too_similar(q["text"], variant["variant_text"]):
-            print(f"  Variant too similar to original (>{SIMILARITY_THRESHOLD:.0%}), retrying.")
+            print(f"  Variant too similar to original (>{sim_thresh:.0%}), retrying.")
             continue
 
         gen_ans = str(variant.get("correct_answer", "")).strip()
         if not gen_ans:
             print("  Generator produced empty correct_answer.")
+            continue
+        # Belt-and-suspenders after any JSON coercion edge cases
+        late_fr = _free_response_correct_answer_invalid(gen_ans, variant)
+        if forced_type == "FREE_RESPONSE" and late_fr:
+            print(f"  Invalid correct_answer: {late_fr}")
             continue
 
         # --- Call 2: Verify the variant (solve + judge in one pass) ---
