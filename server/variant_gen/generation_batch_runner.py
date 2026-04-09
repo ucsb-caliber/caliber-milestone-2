@@ -1,12 +1,26 @@
+"""
+Full-ingestion batch: generate variants for all questions, append to layout_debug/variants.json.
+
+From the server directory:
+
+  python -m variant_gen.generation_batch_runner
+
+Or use VS Code / Cursor "Run Python File" on this module — the path bootstrap below makes that work.
+"""
+
 import json
 import os
+import sys
 import time
 from pathlib import Path
-from generator import generate_variant, DB_PATH as GENERATOR_DB_PATH
 
-# --- configuration ---
-BASE_DIR = Path(__file__).parent.parent
-DB_PATH = GENERATOR_DB_PATH
+if __name__ == "__main__":
+    _server_dir = Path(__file__).resolve().parent.parent
+    if str(_server_dir) not in sys.path:
+        sys.path.insert(0, str(_server_dir))
+
+from variant_gen import DB_PATH, generate_variant
+
 OUTPUT_PATH = DB_PATH.parent / "variants.json"
 
 DEBUG_BATCH = False
@@ -49,7 +63,7 @@ def main():
     print(f"Total Questions: {total_questions}")
     print(f"Already Completed: {len(processed_ids)}")
     print(f"Output: {OUTPUT_PATH}")
-    print(f"Starting Batch Generation...\n")
+    print("Starting Batch Generation...\n")
     print("-" * 50)
 
     stats = {"success": 0, "fail": 0, "skipped": len(processed_ids)}

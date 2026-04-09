@@ -32,7 +32,7 @@ torch.load = torch_load_compat
 
 # ===================== CONFIG =====================
 
-PDF_PATH = "exam_tests/practicefinal3.pdf"
+PDF_PATH = "exam_tests/practicefinal2.pdf"
 OUTPUT_DIR = "layout_debug"
 
 START_PAGE = 1
@@ -317,7 +317,7 @@ def parse_pdf_to_questions(pages: List[Image.Image], model: Any) -> List[Questio
 
         for _, fut in futures:
             for block in fut.result():
-                if is_question_start(block) and block.btype in ['Text', 'Title']:
+                if is_question_start(block):
                     if current_question is not None:
                         all_questions.append(current_question)
                     current_question = Question(start_page=block.page)

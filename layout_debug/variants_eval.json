@@ -1,0 +1,148 @@
+[
+  {
+    "index": 1,
+    "original_id": "q_efb3d9c130f9a368",
+    "variant": {
+      "original_id": "q_efb3d9c130f9a368",
+      "type": "FREE_RESPONSE",
+      "language": "python",
+      "question_mode": "conceptual",
+      "routing": "rules",
+      "algorithm": "set operations",
+      "storyline": "In a Python-based data analysis project, you are working with datasets that include both string representations and Boolean values. Understanding the difference between these types is crucial for data processing.",
+      "task": "Explain the difference between 'False' and False in Python. One is a string while the other is a Boolean.",
+      "constraints": "",
+      "question": "In a Python-based data analysis project, you are working with datasets that include both string representations and Boolean values. Understanding the difference between these types is crucial for data processing. Explain the difference between 'False' and False in Python. One is a string while the other is a Boolean.",
+      "options": null,
+      "answer": "'False' is a string type that contains the characters F, a, l, s, e, while False is a Boolean type that represents a logical value indicating 'no' or 'not true'.",
+      "scenario_domain": "Computer science course (same domain as the original)",
+      "scenario_style": "conceptual"
+    }
+  },
+  {
+    "index": 2,
+    "original_id": "q_46d9959229dd5723",
+    "variant": {
+      "original_id": "q_46d9959229dd5723",
+      "type": "FREE_RESPONSE",
+      "language": "python",
+      "question_mode": "conceptual",
+      "routing": "rules",
+      "algorithm": "general problem solving",
+      "storyline": "In a data analysis project, you need to process different types of collections of data. Understanding how these collections differ is crucial for selecting the right one for your task.",
+      "task": "Identify at least three different types of sequences in Python. Explain how they differ in terms of mutability, syntax, and usage.",
+      "constraints": "",
+      "question": "In a data analysis project, you need to process different types of collections of data. Understanding how these collections differ is crucial for selecting the right one for your task. Identify at least three different types of sequences in Python. Explain how they differ in terms of mutability, syntax, and usage.",
+      "options": null,
+      "answer": "In Python, three different types of sequences are lists, tuples, and strings. Lists are mutable, allowing for modification after creation, and are defined using square brackets, e.g., my_list = [1, 2, 3]. Tuples, on the other hand, are immutable, meaning their elements cannot be changed once defined, and are created using parentheses, e.g., my_tuple = (1, 2, 3). Strings are also immutable sequences of characters, defined with quotes, e.g., my_string = 'hello'. The key differences lie in their mutability and the syntax used for their creation.",
+      "scenario_domain": "Computer science course (same domain as the original)",
+      "scenario_style": "conceptual"
+    }
+  },
+  {
+    "index": 3,
+    "original_id": "q_f611c88f613b8e41",
+    "variant": {
+      "original_id": "q_f611c88f613b8e41",
+      "type": "MCQ",
+      "language": "python",
+      "question_mode": "algorithmic",
+      "routing": "rules",
+      "algorithm": "hash map lookup",
+      "storyline": "A customer is browsing an e-commerce website to fill their shopping cart with various products. They need to use specific methods to manage their cart effectively.",
+      "task": "Which of the following is a Python built-in list method that can be used to add multiple items to the shopping cart?",
+      "constraints": "",
+      "question": "A customer is browsing an e-commerce website to fill their shopping cart with various products. They need to use specific methods to manage their cart effectively. Which of the following is a Python built-in list method that can be used to add multiple items to the shopping cart?",
+      "options": {
+        "A": "union",
+        "B": "extend",
+        "C": "keyerror",
+        "D": "add",
+        "E": "concatenate"
+      },
+      "answer": "B",
+      "scenario_domain": "E-Commerce",
+      "scenario_style": "reskin"
+    }
+  },
+  {
+    "index": 5,
+    "original_id": "q_c40ad828cea8a3e4",
+    "variant": {
+      "original_id": "q_c40ad828cea8a3e4",
+      "type": "FREE_RESPONSE",
+      "language": "python",
+      "question_mode": "conceptual",
+      "routing": "rules",
+      "algorithm": "set operations",
+      "storyline": "A software development team is working on a project that involves processing user data from a list. They need to understand how to iterate through this data effectively.",
+      "task": "Explain the differences between a for-each loop and a while loop in Python, particularly in the context of iterating over a list of user data.",
+      "constraints": "",
+      "question": "A software development team is working on a project that involves processing user data from a list. They need to understand how to iterate through this data effectively. Explain the differences between a for-each loop and a while loop in Python, particularly in the context of iterating over a list of user data.",
+      "options": null,
+      "answer": "A for-each loop, implemented using a 'for' statement in Python, allows you to iterate over each element in a list directly, making the code more readable and concise. In contrast, a while loop continues to execute as long as a specified condition is true, which requires manual management of the loop variable and can lead to off-by-one errors if not handled carefully. The for-each loop is generally preferred for iterating over lists due to its simplicity and clarity.",
+      "scenario_domain": "Computer science course (same domain as the original)",
+      "scenario_style": "conceptual"
+    }
+  },
+  {
+    "index": 10,
+    "original_id": "q_105a7e6eab6052af",
+    "variant": {
+      "original_id": "q_105a7e6eab6052af",
+      "type": "FREE_RESPONSE",
+      "language": "python",
+      "question_mode": "class_design",
+      "routing": "rules",
+      "algorithm": "class design / OOP",
+      "storyline": "You are building a messaging platform that allows users to communicate in real time. Each message in a channel should be tracked for easy access and display.",
+      "task": "Write a class named Message that represents each message sent in a chat channel. Each message has the following attributes: a sender (the user who sent the message), a content (the text of the message), and a timestamp (when the message was sent). The Message class should have an initializer that accepts the sender, content, and timestamp as arguments. These values should be assigned to the object's respective attributes. The class should also have the following methods: a display() method that prints the message in the format \"[timestamp] sender: content\" and a __str__() method that returns a string describing the message in terms of its sender and content (e.g., \"Alice: Hello, world!\").",
+      "constraints": "",
+      "question": "You are building a messaging platform that allows users to communicate in real time. Each message in a channel should be tracked for easy access and display. Write a class named Message that represents each message sent in a chat channel. Each message has the following attributes: a sender (the user who sent the message), a content (the text of the message), and a timestamp (when the message was sent). The Message class should have an initializer that accepts the sender, content, and timestamp as arguments. These values should be assigned to the object's respective attributes. The class should also have the following methods: a display() method that prints the message in the format \"[timestamp] sender: content\" and a __str__() method that returns a string describing the message in terms of its sender and content (e.g., \"Alice: Hello, world!\").",
+      "options": null,
+      "answer": "class Message:\n    def __init__(self, sender, content, timestamp):\n        self.sender = sender\n        self.content = content\n        self.timestamp = timestamp\n\n    def display(self):\n        print(f'[{self.timestamp}] {self.sender}: {self.content}')\n\n    def __str__(self):\n        return f'{self.sender}: {self.content}'",
+      "scenario_domain": "Chat Application",
+      "scenario_style": "swe"
+    }
+  },
+  {
+    "index": 11,
+    "original_id": "q_47199f87f221055c",
+    "variant": {
+      "original_id": "q_47199f87f221055c",
+      "type": "FREE_RESPONSE",
+      "language": "python",
+      "question_mode": "class_design",
+      "routing": "rules",
+      "algorithm": "class design / OOP",
+      "storyline": "You are building a real-time messaging platform where users can send messages in various channels. Each channel can either be a public chat or a private group chat.",
+      "task": "Write a class named ChatChannel that inherits from the Channel class. A ChatChannel should have an additional boolean attribute is_private that indicates whether the channel is a private group chat or not. The value of this attribute should be set during initialization.",
+      "constraints": "",
+      "question": "You are building a real-time messaging platform where users can send messages in various channels. Each channel can either be a public chat or a private group chat. Write a class named ChatChannel that inherits from the Channel class. A ChatChannel should have an additional boolean attribute is_private that indicates whether the channel is a private group chat or not. The value of this attribute should be set during initialization.",
+      "options": null,
+      "answer": "class ChatChannel(Channel):\n    def __init__(self, name, is_private=False):\n        super().__init__(name)\n        self.is_private = is_private",
+      "scenario_domain": "Chat Application",
+      "scenario_style": "swe"
+    }
+  },
+  {
+    "index": 14,
+    "original_id": "q_691569a962b27f05",
+    "variant": {
+      "original_id": "q_691569a962b27f05",
+      "type": "FREE_RESPONSE",
+      "language": "python",
+      "question_mode": "algorithmic",
+      "routing": "rules",
+      "algorithm": "recursion",
+      "storyline": "In a busy parking lot, cars are parked in a specific sequence based on their entry times. Each car's parking duration is determined by a unique pattern that influences how long it stays in the lot.",
+      "task": "Write a recursive function next_car_duration(entry_number) that calculates the duration of the nth car in the parking sequence.",
+      "constraints": "",
+      "question": "In a busy parking lot, cars are parked in a specific sequence based on their entry times. Each car's parking duration is determined by a unique pattern that influences how long it stays in the lot. Write a recursive function next_car_duration(entry_number) that calculates the duration of the nth car in the parking sequence.",
+      "options": null,
+      "answer": "def next_car_duration(entry_number):\n    if entry_number == 1:\n        return 2\n    elif entry_number == 2:\n        return 3\n    else:\n        return next_car_duration(entry_number - 1) * next_car_duration(entry_number - 2)",
+      "scenario_domain": "Parking Lot",
+      "scenario_style": "reskin"
+    }
+  }
+]
