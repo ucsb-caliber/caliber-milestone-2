@@ -368,6 +368,58 @@
           "metadata": {}
         }
       ]
+    },
+    {
+      "ingestion_id": "ing_4f60c13b39eecd49",
+      "created_at": "2026-04-09T00:11:34.345159Z",
+      "source_pdf": "exam_tests/practice_final.pdf",
+      "exam_id": "practice_final",
+      "questions": [
+        {
+          "question_id": "q_cdd95741c1fbca20",
+          "start_page": 1,
+          "page_nums": [
+            1,
+            2
+          ],
+          "text": "1. Suppose that items A, B, C, D and E are pushed, in that order, onto an initially empty stack S. S is then popped four times; as each item is popped off, it is inserted into an initially empty queue. If two items are then removed from the queue, what is the next item that will be removed from the queue? A. item A B. item B C. item C D. item D E. item E If the binary tree below is printed by a preorder traversal, what will the result be? 6 / \\ 17 22 / \\ / \\ 9 4 16 12 A. 9417 16 12 11 6 B. 917 6 4 16 22 12 C. 6917 4 16 22 12 D. 6 17 22 9 4 16 12 E. 6 17 9 4 22 16 12 Agraph implementation that uses a two-dimensional array to represent the edges would be most reasonable for which of the following cases? A. 1000 nodes, 1200 edges B. 4000 edges C. 1000 nodes, 10000 edges D. 20 edges E. none of these, since a graph can only be represented by a linked structure.\ncompletely fill in the appropriate bubble, and to erase any stray marks. 4. Suppose that items A, B, C, D and E are pushed, in that order, onto an initially empty stack S. S is then popped four times; as each item is popped off, it is inserted into an initially empty queue. If two items are then removed from the queue, what is the next item that will be removed from the queue? A. item A B. item B C. item C D. item D E. item E If the binary tree below is printed by a preorder traversal, what will the result be? 6 / \\ 17 22 / \\ / \\ 9 4 16 12 A. 9417 16 12 11 6 B. 917 6 4 16 22 12 C. 6917 4 16 22 12 D. 6 17 22 9 4 16 12 E. 6 17 9 4 22 16 12 6. Agraph implementation that uses a two-dimensional array to represent the edges would be most reasonable for which of the following cases? A. 1000 nodes, 1200 edges B. 4000 edges C. 1000 nodes, 10000 edges D. 20 edges E. none of these, since a graph can only be represented by a linked structure.",
+          "text_hash": "9f8c200b2279939a",
+          "image_crops": [
+            "layout_debug/crops/practice_final/ing_4f60c13b39eecd49/q_cdd95741c1fbca20_p001.png",
+            "layout_debug/crops/practice_final/ing_4f60c13b39eecd49/q_cdd95741c1fbca20_p002.png"
+          ],
+          "type": null,
+          "metadata": {}
+        },
+        {
+          "question_id": "q_32011e14d7671267",
+          "start_page": 3,
+          "page_nums": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          "text": "7. Abinary tree is constructed of nodes that are instances of the following class: public class Node { public int val; public Node left; public Node right; Consider the following method: public static Node mystery(Node root) { if Croot.right == null) return root; else return mystery(root.right) ; You consult three supposedly tech-savvy consultants, and you get the following three opinions about what the method does when passed a reference to the root node of a binary tree: I. It returns the last node visited by an inorder traversal Il. It returns the last node visited by a postorder traversal ll. It returns the last node visited by a level-order traversal Which of these opinions is correct regardless of the contents of the tree? A. | only B. Il only C. Ill only D. | and Ill E. Il and Ill 8. With a poorly chosen hash function, it is possible to have a situation in which the search time in a hash table of N items goes to A. O(N) B. O(N!) C. O(log N) D. O(N?) E. O(1)\nn p\nWhich of the following expressions does not refer to the third node in the list?\nA. p.next B. n.next.next C. p.prev.next D. p.next.prev.next E. n.next.next.prev.next\nA police department wants to maintain a database of up to 1800 license-plate of people who receive frequent tickets so that it can be determined very quickly whether or not a given license plate is in the database. Speed of response is important; efficient use of memory is also important, but not as important as response. Which of the following data structures would be most appropriate task? A. linked list B. asorted array with 1800 entries C. ahash table using open addressing with 1800 entries D. ahash table using open addressing with 3600 entries E. ahash table using open addressing with 10000 entries\nOQ A. lonly B. D. either Il or Ill E. none of these 12. An array of 7 integers is being sorted by the heapsort algorithm. After the initial phase of the algorithm (constructing the heap), which of the following is a possible ordering for the array? A. 85 78 45 51 53 47 49 B. 85 49 78 45 47 51 58 C. 85 78 49 45 47 51 53 D. 45 85 78 53 51 49 47 E. 85 51 78 53 49 47 45\nWhich of the following input sequences will not produce this binary search tree?\nA. 5349127 8 6 20 B. 59376 8 4 12 20 C. 59786 12 203 4 D. 59738 12 6 4 20 E. 59367 8 4 12 20\nPART Il: Answer 3 of the 4 problems from this part. (12 pts. each; 36 pts. total) Important: Fill out the box accompanying each problem to indicate if it should be graded. If you leave the boxes blank, we will not count your best 3 problems.\na. 7 points Suppose the keys on the middle row of a standard keyboard (ASDFGHUJKL) are inserted in succession into an initially empty binary search tree. Draw the tree after this sequence of insertions has been made.\nb. 8 points\nSuppose the keys on the middle row of a standard keyboard (ASDFGHUJKL) are inserted in succession into an initially empty 2-3 tree. Draw diagrams to illustrate the growth of the tree, showing the tree just before and just after all splits.\nuses open addressing. following sequence of keys is to be inserted: 15 1782335\nInsert these keys using each of the following approaches. If overflow occurs, say so, and indicate the element that causes the overflow.\na. h(x) = x % 7; linear probing\nb. h(x) = x % 7; quadratic probing\n0 0 1 1 2 2 3 3 4 4 5 5 6 6\nh(x) = x % 7; double hashing with h2(x) = x/7 + 1 (using integer division)\n0 1 2 3 4 5 6\nGraph Algorithms | (15 points total)\nAlgorithms | (15 points total) A B Cc 10 20 30 17 18 22 D E F\na. 4 points\nPerform a depth-first traversal of the graph shown above, starting with vertex C. Select the smallest edge first when appropriate. In the space below, list the vertices the order in which they are visited.\nb. 4 points\nPerform a breadth-first traversal of the graph shown above, starting with vertex C. Select the smallest edge first when appropriate. In the space below, list the vertices in the order in which they are visited.\nc. 7 points\nSuppose you are using Dijkstra’s algorithm to find the shortest path from vertex D to vertex E. List, in the order in which they become known, all vertices to which a shortest path is determined in the process of solving this problem, and the length of the shortest path to each of these vertices.\nAlgorithms II (15 points total) A , 10 20 30 17 18 22 D E F\na. 6 points\nSuppose that Prim’s algorithm has been executed, starting from node F, up to the point which there are four edges selected for inclusion in the minimal spanning tree. List four edges in the order that they are selected for inclusion, using notation similar to (A, to specify an edge.\nSuppose that the MST2 algorithm from Problem Set 5 has been executed, up to the point where there are four edges selected for inclusion in the minimal spanning tree. List these four edges in the order that they are selected for inclusion.\nc. 3 points\nShow an example of a spanning tree that is not minimal by darkening the appropriate edges on the diagram below:\nA 3 10 20 30 17 18 22 D E F",
+          "text_hash": "1140fde260deadb9",
+          "image_crops": [
+            "layout_debug/crops/practice_final/ing_4f60c13b39eecd49/q_32011e14d7671267_p003.png",
+            "layout_debug/crops/practice_final/ing_4f60c13b39eecd49/q_32011e14d7671267_p004.png",
+            "layout_debug/crops/practice_final/ing_4f60c13b39eecd49/q_32011e14d7671267_p005.png",
+            "layout_debug/crops/practice_final/ing_4f60c13b39eecd49/q_32011e14d7671267_p006.png",
+            "layout_debug/crops/practice_final/ing_4f60c13b39eecd49/q_32011e14d7671267_p007.png",
+            "layout_debug/crops/practice_final/ing_4f60c13b39eecd49/q_32011e14d7671267_p008.png",
+            "layout_debug/crops/practice_final/ing_4f60c13b39eecd49/q_32011e14d7671267_p009.png",
+            "layout_debug/crops/practice_final/ing_4f60c13b39eecd49/q_32011e14d7671267_p010.png"
+          ],
+          "type": null,
+          "metadata": {}
+        }
+      ]
     }
   ]
 }
