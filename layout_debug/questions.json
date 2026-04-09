@@ -2,171 +2,21 @@
   "schema_version": "1.0",
   "ingestions": [
     {
-      "ingestion_id": "ing_a19eb6d72e43f129",
-      "created_at": "2026-01-21T00:20:05.330487Z",
-      "source_pdf": "exam_tests/practicefinal2.pdf",
-      "exam_id": "practicefinal2",
-      "questions": [
-        {
-          "question_id": "q_ef2a9689e7466caf",
-          "start_page": 2,
-          "page_nums": [
-            2
-          ],
-          "text": "Problem 1\nror each of the following, give a worst-case runtime, and a brief explanation (a sentence or two). In\ncases where the algorithm isn’t specified, use the best one you can think of.\n1. Removing the minimum element from a heap that contains n items\n2. Constructing a minimum spanning tree for a connected graph with n nodes and n? edges using\nKruskal’s algorithm\n3. Determining whether an item occurs in an unsorted singly-linked list\n\n4, Sorting n integers, all between 0 and 9, where n is much greater than\n1\n0\n0.\n5. Finding a spanning tree (not necessarily a minimum-weight spanning tree) for a connected\ngraph of n nodes and nlogn edges.\n6. Doing a pre-order traversal for a binary tree with n nodes.",
-          "text_hash": "56ef4e952c9b49f9",
-          "image_crops": [
-            "layout_debug/crops/practicefinal2/ing_a19eb6d72e43f129/q_ef2a9689e7466caf_p002.png"
-          ],
-          "type": null,
-          "metadata": {}
-        },
-        {
-          "question_id": "q_213ed0f990f1db7f",
-          "start_page": 3,
-          "page_nums": [
-            3
-          ],
-          "text": "Problem 2\nn a Dinary search tree, 4, In-order traversal will visit the nodes In increasing-key order, thus\nyroviding a linear-time mechanism for extracting all keys in order.\nran | ro | rr J f 4 y+ (oF - FL zy 3 yy yey a , 7 IaiOW\nSuppose that you have some range of keys, say kl < k < k2, and you'd like to extract all k\n1 T that lie within this range, and you'd like to get the results, as before, in increasing-key ord\nNote that neither k1 nor k2 needs to actually be a key in the BST, and that the returned list\neys might well be empty!) Once again, inorder traversal with a test for in-range-ness will solve |\nroblem in worst case O(n) time, where n is the number of keys in the tree. You are to descr\now to solve the problem in time O(h + s), where h is the height of the tree 7’, and s is the numl\nf kevs returned.\ne Give a brief description of your approach to this proble\ne Write pseudocode for your algorithm.\ne Explain briefly why your algorithm is O(h + s).",
-          "text_hash": "bb59a106dffc5bf0",
-          "image_crops": [
-            "layout_debug/crops/practicefinal2/ing_a19eb6d72e43f129/q_213ed0f990f1db7f_p003.png"
-          ],
-          "type": null,
-          "metadata": {}
-        },
-        {
-          "question_id": "q_0dfea87a829d84bd",
-          "start_page": 4,
-          "page_nums": [
-            4
-          ],
-          "text": "Problem 3\ny now you should know how to construct a minimum spanning tree from a graph. However,\nmetimes we don’t want a minimum spanning tree — perhaps we want to force our spanning tree\ncontain specific edges, regardless of whether or not those edges are optimal.\nsuppose you are given an undirected graph G = (V,/) with edge weights w,, and an acyche\nf edges F’, where F is a subset of E. (You may assume the edges are decorated such that “inF(\nill return either true if e is one of the edges in F’, or false otherwise.) Develop an algorithm tl\nins in O(|E|log|£|) and returns the lightest spanning tree T such that the edges of F’ are\nyntained in 7’.",
-          "text_hash": "0afa716f8567d3d7",
-          "image_crops": [
-            "layout_debug/crops/practicefinal2/ing_a19eb6d72e43f129/q_0dfea87a829d84bd_p004.png"
-          ],
-          "type": null,
-          "metadata": {}
-        },
-        {
-          "question_id": "q_df4f34e6740681f8",
-          "start_page": 5,
-          "page_nums": [
-            5
-          ],
-          "text": "Problem 4\nYonsider the problem of finding the length of the longest path from a vertex s to a vertex ¢ in a\nlirected acyclic graph G = (V, E) with edge-weights we.\nVw PEEK £2 LINKS Lildabl LI YyY Call sUIvVe bills PILUUICIT Uollls all ALLOLOU LAL Kollad © FLIBUILUIIII Ulte\nstores the maximum cost of each node and uses a maximum cost priority queue (a priorit\nqueue that returns the maximum value instead of the minimum value). Why would this n\nwork?\n\ne Describe and write pseudocode for an algorithm that would work. If there exists no pat\nbetween s and t, then return oo.",
-          "text_hash": "35c6b5b1a9993de8",
-          "image_crops": [
-            "layout_debug/crops/practicefinal2/ing_a19eb6d72e43f129/q_df4f34e6740681f8_p005.png"
-          ],
-          "type": null,
-          "metadata": {}
-        },
-        {
-          "question_id": "q_bfd7c481dc24610b",
-          "start_page": 6,
-          "page_nums": [
-            6
-          ],
-          "text": "Problem 5\nonsider the following two algorithms, each of which takes an input graph, G = (V, E) with edge\nengths Iu, v).\nAlgorithm A: This algorithm picks a random node s, runs Dijsktras algorithm on it to find dis-\n‘ances from s to all nodes, and retains the |V|/2 nodes that are closest to s [in the case of a tie, it\nchooses randomly.]. It then recursively calls itself on the graph consisting of these nearby nodes and\nill edges in E that join such nearby nodes. For a graph with a single vertex, the algorithm returns\nchat node. This particular implementation of Dijkstra uses an array to represent the priority queue.\nVigorithm b: Lhe second algorithm sorts the edges by lengtn, and returns the length of the median\ndge.\nWhat are the runtimes of each algorithm? For what kinds of graphs would Algorithm A be faster?\nA lonrnithm RR? Rriocfix, eavnlain wonur ancwoare",
-          "text_hash": "74d1459adbbee185",
-          "image_crops": [
-            "layout_debug/crops/practicefinal2/ing_a19eb6d72e43f129/q_bfd7c481dc24610b_p006.png"
-          ],
-          "type": null,
-          "metadata": {}
-        },
-        {
-          "question_id": "q_ba87a62062b3a184",
-          "start_page": 7,
-          "page_nums": [
-            7
-          ],
-          "text": "Problem 6\nriven an input string and a dictionary of words, develop an efficient algorithm to determine if tl\niput string can be segmented into a space-separated sequence of dictionary words. There is no lim\n9 the number of times you may use each word in the dictionary.\nFor example, suppose we have the following dictionary of known words:\ndictionary = {\"i\", \"like\", \"ice\", \"cream\", \"icecream\", \"popsicle\"}\nConsider the following input/output pairs.\nInput: \"ilike\"\nOutput: True\nWe can segment the string into \"i like\" using words from the dictionary.\nInput: \"ilikeicecream\"\nOutput: True\nWe can represent the string as either \"i like icecream\" or \"i like ice cream.\"\nInput: \"ieatpopsicles\"\nOutput: False\nWe can’t segment the string into words contained in our dictionary.\nNote that a greedy approach will not always guarantee the correct solution! For example, conside\nthe following test case:\ndictionary = {\"a\", \"an\", \"ill\", \"pill\", \"pillow\", \"case\"}\nInput: \"pillowcase\"\nOutput: True\nWe can segment the string into \"pillow case.\"\nTh thie paca tLuam teal tn Sn tha Brot matphinea neofiy werd) wab “at awawar that mabkn.\nFor example, suppose we have the following dictionary of known words:\ndictionary = {\"i\", \"like\", \"ice\", \"cream\", \"icecream\", \"popsicle\"}\nConsider the following input/output pairs.\nInput: \"ilike\"\nOutput: True\nWe can segment the string into \"i like\" using words from the dictionary.\nInput: \"ilikeicecream\"\nOutput: True\nWe can represent the string as either \"i like icecream\" or \"i like ice cream.\"\nInput: \"ieatpopsicles\"\nOutput: False\nWe can’t segment the string into words contained in our dictionary.\nNote that a greedy approach will not always guarantee the correct solution! For example, conside\nthe following test case:\ndictionary = {\"a\", \"an\", \"ill\", \"pill\", \"pillow\", \"case\"}\nInput: \"pillowcase\"\nOutput: True\nWe can segment the string into \"pillow case.\"\nTh thie paca tLuam teal tn Sn tha Brot matphinea neofiy werd) wab “at awawar that mabkn.\nn this case, if we tried to find the first matching prefix, we would pick “pill.” However, that\nhe rest of the string (“owcase”) unsegmentable given our dictionary.",
-          "text_hash": "0e145e15ce034e95",
-          "image_crops": [
-            "layout_debug/crops/practicefinal2/ing_a19eb6d72e43f129/q_ba87a62062b3a184_p007.png"
-          ],
-          "type": null,
-          "metadata": {}
-        },
-        {
-          "question_id": "q_8bdc212ca4aa5794",
-          "start_page": 8,
-          "page_nums": [
-            8
-          ],
-          "text": "Problem 7\nVrite pseudocode tor a method reverseList( head) that takes In the head of a singly linked-list a:\n-everses’ the list. Note that a singly linked-list is simply a linked list in which every node has\nointer to its next element in the list and the last node’s next pointer points to null. Example: Giv\nlinked listA > B—- C — D with head A the method turns it into the list! D> C7 B- A wi\nead D. Explain the runtime of your solution.",
-          "text_hash": "cbbb4f5eefa61406",
-          "image_crops": [
-            "layout_debug/crops/practicefinal2/ing_a19eb6d72e43f129/q_8bdc212ca4aa5794_p008.png"
-          ],
-          "type": null,
-          "metadata": {}
-        },
-        {
-          "question_id": "q_312e03b15a739b84",
-          "start_page": 9,
-          "page_nums": [
-            9,
-            10
-          ],
-          "text": "Problem 8\nYou are given a non-empty stack S of integers. Write pseudocode for a method that sorts the stac\nn ascending order from the bottom-up (i.e. the bottom element is the smallest integer). You ar\nwllowed to use the push() , pop(), peek(), isEmpty() methods of a stack. You may use another stac\nn order to solve this problem, but you may not use other data structures in your solution.\n\nTint : You can accomplish this by creating one more stack in your method, and transfer element\nnto the new stack each time checking that the transfer doesn’t violate the sort order.\n\nHxcample : Here’s a stack S\n1. What is the purpose of the learning rate 7?\n2. Name two defining aspects of the functional paradigm and describe them in a few senten\n3. Are there graphs where Dijkstra’s will fail? If so, explain why. If not, explain why not.\n4. Describe one difference between problems in the sets P and NP.\n5. What is the difference between online algorithms and offline algorithms? Give an examp!|\na time that we have used each in class.",
-          "text_hash": "30bbeb46c7bf2dbc",
-          "image_crops": [
-            "layout_debug/crops/practicefinal2/ing_a19eb6d72e43f129/q_312e03b15a739b84_p009.png",
-            "layout_debug/crops/practicefinal2/ing_a19eb6d72e43f129/q_312e03b15a739b84_p010.png"
-          ],
-          "type": null,
-          "metadata": {}
-        }
-      ]
-    },
-    {
       "ingestion_id": "ing_ac24c046ff1c7985",
       "created_at": "2026-02-01T03:41:26.029463Z",
       "source_pdf": "exam_tests/practicefinal3.pdf",
       "exam_id": "hw3",
       "questions": [
         {
-          "question_id": "q_684af8b52e32d938",
-          "start_page": 1,
-          "page_nums": [
-            1
-          ],
-          "text": "Question 1\nBy selecting \"True\", you agree that you understand and will adhere to the Bowdoin Academic Honor code and the CSCI 1101 policies. Failure to adhere to these rules may result in a Judicial Board hearing.\nBy selecting \"False\" or leaving this question blank, you forfeit the opportunity to complete the exam.\nNote that the programming solutions below do not have docstrings, and many of the following are merely examples of possible answers. You may have found an alternative solution that works just as well.",
-          "text_hash": "c5db287bd89c83a9",
-          "image_crops": [
-            "layout_debug/crops/hw3/ing_ac24c046ff1c7985/q_684af8b52e32d938_p001.png"
-          ],
-          "type": null,
-          "metadata": {}
-        },
-        {
           "question_id": "q_efb3d9c130f9a368",
           "start_page": 2,
           "page_nums": [
             2
           ],
-          "text": "Question 2\nWhat is the difference between ‘‘True’’ and True in Python?\nOne is a string while the other is a Boolean.",
+          "text": "Question 2\nWhat is the difference between \u2018\u2018True\u2019\u2019 and True in Python?\nOne is a string while the other is a Boolean.",
           "text_hash": "9e1a1b66c811038b",
           "image_crops": [
             "layout_debug/crops/hw3/ing_ac24c046ff1c7985/q_efb3d9c130f9a368_p002.png"
-          ],
-          "type": null,
-          "metadata": {}
-        },
-        {
-          "question_id": "q_46d9959229dd5723",
-          "start_page": 2,
-          "page_nums": [
-            2
-          ],
-          "text": "Question 3\nName at least three different sequences. How do they differ?",
-          "text_hash": "05cf428ba83296d5",
-          "image_crops": [
-            "layout_debug/crops/hw3/ing_ac24c046ff1c7985/q_46d9959229dd5723_p002.png"
           ],
           "type": null,
           "metadata": {}
@@ -261,7 +111,7 @@
           "page_nums": [
             3
           ],
-          "text": "Question 10\nWrite a function debug() that takes in two sets, and makes a new set that contains the elements both sets have in common. If \"bug\" is one of the elements, remove that from the new set. Return the new set.\nFor example,\ndebug({\"bug\", \"rice\", {\"rice\", \"bug\", \"sugar\"}) should evaluate to {‘rice’}.",
+          "text": "Question 10\nWrite a function debug() that takes in two sets, and makes a new set that contains the elements both sets have in common. If \"bug\" is one of the elements, remove that from the new set. Return the new set.\nFor example,\ndebug({\"bug\", \"rice\", {\"rice\", \"bug\", \"sugar\"}) should evaluate to {\u2018rice\u2019}.",
           "text_hash": "dec595a1d8a2be07",
           "image_crops": [
             "layout_debug/crops/hw3/ing_ac24c046ff1c7985/q_d98d1753af95dee0_p003.png"
@@ -275,7 +125,7 @@
           "page_nums": [
             4
           ],
-          "text": "Question 11\nWrite a class named Book that represents each book in a library. Each book has the following attributes:\ne title: the title of the book. e author: the author of the book. e content: a string representing the text of the book. Each page is separated by the ‘\\n’ character. The Book class should have an initializer that accepts the book’s title, author, and content as arguments. These values should be assigned to the object’s respective attributes. The class should also have the following methods: e read(): takes in a page number, and prints out the content of each page starting from the beginning until the given page number is reached. e __str__() : return a string describing this book in terms of its name and author (e.g., \"Adventures of Huckleberry Finn by Mark Twain\").",
+          "text": "Question 11\nWrite a class named Book that represents each book in a library. Each book has the following attributes:\ne title: the title of the book. e author: the author of the book. e content: a string representing the text of the book. Each page is separated by the \u2018\\n\u2019 character. The Book class should have an initializer that accepts the book\u2019s title, author, and content as arguments. These values should be assigned to the object\u2019s respective attributes. The class should also have the following methods: e read(): takes in a page number, and prints out the content of each page starting from the beginning until the given page number is reached. e __str__() : return a string describing this book in terms of its name and author (e.g., \"Adventures of Huckleberry Finn by Mark Twain\").",
           "text_hash": "9e07848645adfb28",
           "image_crops": [
             "layout_debug/crops/hw3/ing_ac24c046ff1c7985/q_105a7e6eab6052af_p004.png"
@@ -303,7 +153,7 @@
           "page_nums": [
             5
           ],
-          "text": "Question 13\nWrite a class named LibraryEmployee. Each LibraryEmployee has the following attributes:\ne name: the name of the employee.\ne favorites: a set of this employee’s favorite Books (or ComicBooks). e num_coffees: an integer representing how many coffees this employee has had today. This value should begin at zero when a LibraryEmployee is initialized.\nbegin at zero a LibraryEmployee The LibraryEmployee class should have an initializer that accepts the employee’s name and favorites as arguments. These values should be assigned to the object’s respective attributes. Additionally, the LibraryEmployee class should have the following methods: e drink_coffee(): takes in an integer num, and increases this LibraryEmployee’s num_coffees attribute by that integer. e shush_hooligans(): takes in an integer num_hooligans, and prints out “Shhh!” that many times. Also, drinks a coffee for each hooligan shushed. e __str__() : return the LibraryEmployee’s name.",
+          "text": "Question 13\nWrite a class named LibraryEmployee. Each LibraryEmployee has the following attributes:\ne name: the name of the employee.\ne favorites: a set of this employee\u2019s favorite Books (or ComicBooks). e num_coffees: an integer representing how many coffees this employee has had today. This value should begin at zero when a LibraryEmployee is initialized.\nbegin at zero a LibraryEmployee The LibraryEmployee class should have an initializer that accepts the employee\u2019s name and favorites as arguments. These values should be assigned to the object\u2019s respective attributes. Additionally, the LibraryEmployee class should have the following methods: e drink_coffee(): takes in an integer num, and increases this LibraryEmployee\u2019s num_coffees attribute by that integer. e shush_hooligans(): takes in an integer num_hooligans, and prints out \u201cShhh!\u201d that many times. Also, drinks a coffee for each hooligan shushed. e __str__() : return the LibraryEmployee\u2019s name.",
           "text_hash": "268f228958fffefa",
           "image_crops": [
             "layout_debug/crops/hw3/ing_ac24c046ff1c7985/q_d8f4ba3ee4de7d8a_p005.png"
@@ -317,7 +167,7 @@
           "page_nums": [
             6
           ],
-          "text": "Question 14\nWrite a class named Library. A library has the following attributes:\ne name: the name of this library. e employees: a list of LibraryEmployees that work at the library. e books: a dictionary that contains Books as keys. The value paired with each key is either an empty string, or a string representing the name of a person who has checked out the Book.\nname: the name of this library.\nThe Library class should have an initializer that MAY accept employees and books as argu- ments, but doesn’t have to do so. If provided, these values should be assigned to the object’s respective attributes. If not provided, employees and books should begin as an empty list and dictionary, respectively. The value for the name attribute is always provided.\nments, but doesn’t have to do so. If provided, these values should be assigned to the object’s respective attributes. If not provided, employees and books should begin as an empty list and dictionary, respectively. The value for the name attribute is always provided. The class should also have the following methods: e hire_employee(): takes in a new LibraryEmployee, and adds it to this library’s list of employees. e add_book(): takes in a new Book, and adds it to this library’s books (unless the library already has this book). If the library already has the book, print out the name of the library followed by “ already has this book!”. e check_out_book(): takes in a Book and a person’s name. If this book is in the dictionary of books, change the value at that key in the books dictionary to the person’s name. Otherwise, print out “Sorry, we don’t have ” followed by the name of the book and a period. e return_book(): takes in a Book. If this book is in the dictionary of books, change the value at that key in the books dictionary to an empty string. Otherwise, print out “Sorry, wrong library.”. e __str__() : return the name of the library.",
+          "text": "Question 14\nWrite a class named Library. A library has the following attributes:\ne name: the name of this library. e employees: a list of LibraryEmployees that work at the library. e books: a dictionary that contains Books as keys. The value paired with each key is either an empty string, or a string representing the name of a person who has checked out the Book.\nname: the name of this library.\nThe Library class should have an initializer that MAY accept employees and books as argu- ments, but doesn\u2019t have to do so. If provided, these values should be assigned to the object\u2019s respective attributes. If not provided, employees and books should begin as an empty list and dictionary, respectively. The value for the name attribute is always provided.\nments, but doesn\u2019t have to do so. If provided, these values should be assigned to the object\u2019s respective attributes. If not provided, employees and books should begin as an empty list and dictionary, respectively. The value for the name attribute is always provided. The class should also have the following methods: e hire_employee(): takes in a new LibraryEmployee, and adds it to this library\u2019s list of employees. e add_book(): takes in a new Book, and adds it to this library\u2019s books (unless the library already has this book). If the library already has the book, print out the name of the library followed by \u201c already has this book!\u201d. e check_out_book(): takes in a Book and a person\u2019s name. If this book is in the dictionary of books, change the value at that key in the books dictionary to the person\u2019s name. Otherwise, print out \u201cSorry, we don\u2019t have \u201d followed by the name of the book and a period. e return_book(): takes in a Book. If this book is in the dictionary of books, change the value at that key in the books dictionary to an empty string. Otherwise, print out \u201cSorry, wrong library.\u201d. e __str__() : return the name of the library.",
           "text_hash": "5bdf3078c6be2b88",
           "image_crops": [
             "layout_debug/crops/hw3/ing_ac24c046ff1c7985/q_a60cd9280120b857_p006.png"
@@ -359,7 +209,7 @@
           "page_nums": [
             8
           ],
-          "text": "Question 18\nWrite a recursive function separate() that takes in a single list of integers as a parameter. It should separate the odd and even integers so that the odd numbers are together at the beginning of the list, and the even numbers are together at the end of the list. This “separated” list is what should be returned.\nprint(separate([1, 2, 3, 7, 2, 4])) result in something like: (1, 3, 7, 4, 2, 2] def if len(data) == 0: return [] #odds if data[0] % 2 != 0: return data[0:1] + separate(data[1:]) #evens else: return separate(data[1:]) + data[0:1]\nFor example,\nreturn separate(data[1:]) + data[0:1]",
+          "text": "Question 18\nWrite a recursive function separate() that takes in a single list of integers as a parameter. It should separate the odd and even integers so that the odd numbers are together at the beginning of the list, and the even numbers are together at the end of the list. This \u201cseparated\u201d list is what should be returned.\nprint(separate([1, 2, 3, 7, 2, 4])) result in something like: (1, 3, 7, 4, 2, 2] def if len(data) == 0: return [] #odds if data[0] % 2 != 0: return data[0:1] + separate(data[1:]) #evens else: return separate(data[1:]) + data[0:1]\nFor example,\nreturn separate(data[1:]) + data[0:1]",
           "text_hash": "d83198b1679ceae9",
           "image_crops": [
             "layout_debug/crops/hw3/ing_ac24c046ff1c7985/q_be7bce99d3001b67_p008.png"
@@ -404,7 +254,7 @@
             9,
             10
           ],
-          "text": "7. Abinary tree is constructed of nodes that are instances of the following class: public class Node { public int val; public Node left; public Node right; Consider the following method: public static Node mystery(Node root) { if Croot.right == null) return root; else return mystery(root.right) ; You consult three supposedly tech-savvy consultants, and you get the following three opinions about what the method does when passed a reference to the root node of a binary tree: I. It returns the last node visited by an inorder traversal Il. It returns the last node visited by a postorder traversal ll. It returns the last node visited by a level-order traversal Which of these opinions is correct regardless of the contents of the tree? A. | only B. Il only C. Ill only D. | and Ill E. Il and Ill 8. With a poorly chosen hash function, it is possible to have a situation in which the search time in a hash table of N items goes to A. O(N) B. O(N!) C. O(log N) D. O(N?) E. O(1)\nn p\nWhich of the following expressions does not refer to the third node in the list?\nA. p.next B. n.next.next C. p.prev.next D. p.next.prev.next E. n.next.next.prev.next\nA police department wants to maintain a database of up to 1800 license-plate of people who receive frequent tickets so that it can be determined very quickly whether or not a given license plate is in the database. Speed of response is important; efficient use of memory is also important, but not as important as response. Which of the following data structures would be most appropriate task? A. linked list B. asorted array with 1800 entries C. ahash table using open addressing with 1800 entries D. ahash table using open addressing with 3600 entries E. ahash table using open addressing with 10000 entries\nOQ A. lonly B. D. either Il or Ill E. none of these 12. An array of 7 integers is being sorted by the heapsort algorithm. After the initial phase of the algorithm (constructing the heap), which of the following is a possible ordering for the array? A. 85 78 45 51 53 47 49 B. 85 49 78 45 47 51 58 C. 85 78 49 45 47 51 53 D. 45 85 78 53 51 49 47 E. 85 51 78 53 49 47 45\nWhich of the following input sequences will not produce this binary search tree?\nA. 5349127 8 6 20 B. 59376 8 4 12 20 C. 59786 12 203 4 D. 59738 12 6 4 20 E. 59367 8 4 12 20\nPART Il: Answer 3 of the 4 problems from this part. (12 pts. each; 36 pts. total) Important: Fill out the box accompanying each problem to indicate if it should be graded. If you leave the boxes blank, we will not count your best 3 problems.\na. 7 points Suppose the keys on the middle row of a standard keyboard (ASDFGHUJKL) are inserted in succession into an initially empty binary search tree. Draw the tree after this sequence of insertions has been made.\nb. 8 points\nSuppose the keys on the middle row of a standard keyboard (ASDFGHUJKL) are inserted in succession into an initially empty 2-3 tree. Draw diagrams to illustrate the growth of the tree, showing the tree just before and just after all splits.\nuses open addressing. following sequence of keys is to be inserted: 15 1782335\nInsert these keys using each of the following approaches. If overflow occurs, say so, and indicate the element that causes the overflow.\na. h(x) = x % 7; linear probing\nb. h(x) = x % 7; quadratic probing\n0 0 1 1 2 2 3 3 4 4 5 5 6 6\nh(x) = x % 7; double hashing with h2(x) = x/7 + 1 (using integer division)\n0 1 2 3 4 5 6\nGraph Algorithms | (15 points total)\nAlgorithms | (15 points total) A B Cc 10 20 30 17 18 22 D E F\na. 4 points\nPerform a depth-first traversal of the graph shown above, starting with vertex C. Select the smallest edge first when appropriate. In the space below, list the vertices the order in which they are visited.\nb. 4 points\nPerform a breadth-first traversal of the graph shown above, starting with vertex C. Select the smallest edge first when appropriate. In the space below, list the vertices in the order in which they are visited.\nc. 7 points\nSuppose you are using Dijkstra’s algorithm to find the shortest path from vertex D to vertex E. List, in the order in which they become known, all vertices to which a shortest path is determined in the process of solving this problem, and the length of the shortest path to each of these vertices.\nAlgorithms II (15 points total) A , 10 20 30 17 18 22 D E F\na. 6 points\nSuppose that Prim’s algorithm has been executed, starting from node F, up to the point which there are four edges selected for inclusion in the minimal spanning tree. List four edges in the order that they are selected for inclusion, using notation similar to (A, to specify an edge.\nSuppose that the MST2 algorithm from Problem Set 5 has been executed, up to the point where there are four edges selected for inclusion in the minimal spanning tree. List these four edges in the order that they are selected for inclusion.\nc. 3 points\nShow an example of a spanning tree that is not minimal by darkening the appropriate edges on the diagram below:\nA 3 10 20 30 17 18 22 D E F",
+          "text": "7. Abinary tree is constructed of nodes that are instances of the following class: public class Node { public int val; public Node left; public Node right; Consider the following method: public static Node mystery(Node root) { if Croot.right == null) return root; else return mystery(root.right) ; You consult three supposedly tech-savvy consultants, and you get the following three opinions about what the method does when passed a reference to the root node of a binary tree: I. It returns the last node visited by an inorder traversal Il. It returns the last node visited by a postorder traversal ll. It returns the last node visited by a level-order traversal Which of these opinions is correct regardless of the contents of the tree? A. | only B. Il only C. Ill only D. | and Ill E. Il and Ill 8. With a poorly chosen hash function, it is possible to have a situation in which the search time in a hash table of N items goes to A. O(N) B. O(N!) C. O(log N) D. O(N?) E. O(1)\nn p\nWhich of the following expressions does not refer to the third node in the list?\nA. p.next B. n.next.next C. p.prev.next D. p.next.prev.next E. n.next.next.prev.next\nA police department wants to maintain a database of up to 1800 license-plate of people who receive frequent tickets so that it can be determined very quickly whether or not a given license plate is in the database. Speed of response is important; efficient use of memory is also important, but not as important as response. Which of the following data structures would be most appropriate task? A. linked list B. asorted array with 1800 entries C. ahash table using open addressing with 1800 entries D. ahash table using open addressing with 3600 entries E. ahash table using open addressing with 10000 entries\nOQ A. lonly B. D. either Il or Ill E. none of these 12. An array of 7 integers is being sorted by the heapsort algorithm. After the initial phase of the algorithm (constructing the heap), which of the following is a possible ordering for the array? A. 85 78 45 51 53 47 49 B. 85 49 78 45 47 51 58 C. 85 78 49 45 47 51 53 D. 45 85 78 53 51 49 47 E. 85 51 78 53 49 47 45\nWhich of the following input sequences will not produce this binary search tree?\nA. 5349127 8 6 20 B. 59376 8 4 12 20 C. 59786 12 203 4 D. 59738 12 6 4 20 E. 59367 8 4 12 20\nPART Il: Answer 3 of the 4 problems from this part. (12 pts. each; 36 pts. total) Important: Fill out the box accompanying each problem to indicate if it should be graded. If you leave the boxes blank, we will not count your best 3 problems.\na. 7 points Suppose the keys on the middle row of a standard keyboard (ASDFGHUJKL) are inserted in succession into an initially empty binary search tree. Draw the tree after this sequence of insertions has been made.\nb. 8 points\nSuppose the keys on the middle row of a standard keyboard (ASDFGHUJKL) are inserted in succession into an initially empty 2-3 tree. Draw diagrams to illustrate the growth of the tree, showing the tree just before and just after all splits.\nuses open addressing. following sequence of keys is to be inserted: 15 1782335\nInsert these keys using each of the following approaches. If overflow occurs, say so, and indicate the element that causes the overflow.\na. h(x) = x % 7; linear probing\nb. h(x) = x % 7; quadratic probing\n0 0 1 1 2 2 3 3 4 4 5 5 6 6\nh(x) = x % 7; double hashing with h2(x) = x/7 + 1 (using integer division)\n0 1 2 3 4 5 6\nGraph Algorithms | (15 points total)\nAlgorithms | (15 points total) A B Cc 10 20 30 17 18 22 D E F\na. 4 points\nPerform a depth-first traversal of the graph shown above, starting with vertex C. Select the smallest edge first when appropriate. In the space below, list the vertices the order in which they are visited.\nb. 4 points\nPerform a breadth-first traversal of the graph shown above, starting with vertex C. Select the smallest edge first when appropriate. In the space below, list the vertices in the order in which they are visited.\nc. 7 points\nSuppose you are using Dijkstra\u2019s algorithm to find the shortest path from vertex D to vertex E. List, in the order in which they become known, all vertices to which a shortest path is determined in the process of solving this problem, and the length of the shortest path to each of these vertices.\nAlgorithms II (15 points total) A , 10 20 30 17 18 22 D E F\na. 6 points\nSuppose that Prim\u2019s algorithm has been executed, starting from node F, up to the point which there are four edges selected for inclusion in the minimal spanning tree. List four edges in the order that they are selected for inclusion, using notation similar to (A, to specify an edge.\nSuppose that the MST2 algorithm from Problem Set 5 has been executed, up to the point where there are four edges selected for inclusion in the minimal spanning tree. List these four edges in the order that they are selected for inclusion.\nc. 3 points\nShow an example of a spanning tree that is not minimal by darkening the appropriate edges on the diagram below:\nA 3 10 20 30 17 18 22 D E F",
           "text_hash": "1140fde260deadb9",
           "image_crops": [
             "layout_debug/crops/practice_final/ing_4f60c13b39eecd49/q_32011e14d7671267_p003.png",
@@ -433,24 +283,10 @@
           "page_nums": [
             2
           ],
-          "text": "Problem 1\nFor each of the following, give a worst-case runtime, and a brief explanation (a sentence or two). In cases where the algorithm isn’t specified, use the best one you can think of.\nwhere the algorithm isn’t specified, use the best one you can think of. 1. Removing the minimum element from a heap that contains n items 2. Constructing a minimum spanning tree for a connected graph with n nodes and n? edges using Kruskal’s algorithm 3. Determining whether an item occurs in an unsorted singly-linked list 4. Sorting n integers, all between 0 and 9, where n is much greater than 100. 5. Finding a spanning tree (not necessarily a minimum-weight spanning tree) for a connected graph of n nodes and nlogn edges. 6. Doing a pre-order traversal for a binary tree with n nodes.",
+          "text": "Problem 1\nFor each of the following, give a worst-case runtime, and a brief explanation (a sentence or two). In cases where the algorithm isn\u2019t specified, use the best one you can think of.\nwhere the algorithm isn\u2019t specified, use the best one you can think of. 1. Removing the minimum element from a heap that contains n items 2. Constructing a minimum spanning tree for a connected graph with n nodes and n? edges using Kruskal\u2019s algorithm 3. Determining whether an item occurs in an unsorted singly-linked list 4. Sorting n integers, all between 0 and 9, where n is much greater than 100. 5. Finding a spanning tree (not necessarily a minimum-weight spanning tree) for a connected graph of n nodes and nlogn edges. 6. Doing a pre-order traversal for a binary tree with n nodes.",
           "text_hash": "622b66c686ba6f6e",
           "image_crops": [
             "layout_debug/crops/hw3/ing_b8ee467de9e16552/q_55b3e5416c8545e3_p002.png"
-          ],
-          "type": null,
-          "metadata": {}
-        },
-        {
-          "question_id": "q_21c7b7b8b2884d60",
-          "start_page": 2,
-          "page_nums": [
-            2
-          ],
-          "text": "6. Doing a pre-order traversal for a binary tree with n nodes.\nCS16 — Introduction to Algorithms and Data Structures",
-          "text_hash": "9d5a1a5a8c8bb0b5",
-          "image_crops": [
-            "layout_debug/crops/hw3/ing_b8ee467de9e16552/q_21c7b7b8b2884d60_p002.png"
           ],
           "type": null,
           "metadata": {}
@@ -461,7 +297,7 @@
           "page_nums": [
             3
           ],
-          "text": "Problem 2\nIn a binary search tree, T, in-order traversal will visit the nodes in increasing-key order, thus providing a linear-time mechanism for extracting all keys in order.\nSuppose that you have some range of keys, say kl < k < k2, and like to extract all keys in T that lie within this range, and like to get the results, as before, in increasing-key order. (Note that neither k1 nor k2 needs to actually be a key in the BST, and that the returned list of keys might well be empty!) Once again, inorder traversal with a test for in-range-ness will solve the problem in worst case O(n) time, where n is the number of keys in the tree. You are to describe how to solve the problem in time O(h + s), where h is the height of the tree T, and s is the number of keys returned.\ne Give a brief description of your approach to this problem. e Write pseudocode for your algorithm. e Explain briefly why your algorithm is O(h + s).\nCS16 — Introduction to Algorithms and Data Structures",
+          "text": "Problem 2\nIn a binary search tree, T, in-order traversal will visit the nodes in increasing-key order, thus providing a linear-time mechanism for extracting all keys in order.\nSuppose that you have some range of keys, say kl < k < k2, and like to extract all keys in T that lie within this range, and like to get the results, as before, in increasing-key order. (Note that neither k1 nor k2 needs to actually be a key in the BST, and that the returned list of keys might well be empty!) Once again, inorder traversal with a test for in-range-ness will solve the problem in worst case O(n) time, where n is the number of keys in the tree. You are to describe how to solve the problem in time O(h + s), where h is the height of the tree T, and s is the number of keys returned.\ne Give a brief description of your approach to this problem. e Write pseudocode for your algorithm. e Explain briefly why your algorithm is O(h + s).\nCS16 \u2014 Introduction to Algorithms and Data Structures",
           "text_hash": "e30701104c98375d",
           "image_crops": [
             "layout_debug/crops/hw3/ing_b8ee467de9e16552/q_0c7abbd09835748a_p003.png"
@@ -475,7 +311,7 @@
           "page_nums": [
             4
           ],
-          "text": "Problem 3\nBy now you should know how to construct a minimum spanning tree from a graph. However, sometimes we don’t want a minimum spanning tree — perhaps we want to force our spanning tree to contain specific edges, regardless of whether or not those edges are optimal.\nSuppose you are given an undirected graph G = (V, E) with edge weights w,, and an acyclic set of edges F’, where is a subset of E. (You may assume the edges are decorated such that “inF(e)” will return either true if e is one of the edges in or false otherwise.) Develop an algorithm that runs in O(|E|log|£|) and returns the lightest spanning tree T such that the edges of F are all contained in T.\ne Give a brief description of your approach to this problem. e Write pseudocode for your algorithm. e Explain briefly why your algorithm is log\nCS16 — Introduction to Algorithms and Data Structures",
+          "text": "Problem 3\nBy now you should know how to construct a minimum spanning tree from a graph. However, sometimes we don\u2019t want a minimum spanning tree \u2014 perhaps we want to force our spanning tree to contain specific edges, regardless of whether or not those edges are optimal.\nSuppose you are given an undirected graph G = (V, E) with edge weights w,, and an acyclic set of edges F\u2019, where is a subset of E. (You may assume the edges are decorated such that \u201cinF(e)\u201d will return either true if e is one of the edges in or false otherwise.) Develop an algorithm that runs in O(|E|log|\u00a3|) and returns the lightest spanning tree T such that the edges of F are all contained in T.\ne Give a brief description of your approach to this problem. e Write pseudocode for your algorithm. e Explain briefly why your algorithm is log\nCS16 \u2014 Introduction to Algorithms and Data Structures",
           "text_hash": "6b48a85048562900",
           "image_crops": [
             "layout_debug/crops/hw3/ing_b8ee467de9e16552/q_1e0bd6bae9ec9486_p004.png"
@@ -489,7 +325,7 @@
           "page_nums": [
             5
           ],
-          "text": "Problem 4\nConsider the problem of finding the length of the longest path from a vertex s to a vertex t ina directed acyclic graph G = with edge-weights we.\ne Student A thinks that they can solve this problem using an altered Dijkstra’s Algorithm that stores the maximum cost of each node and uses a maximum cost priority queue (a priority queue that returns the maximum value instead of the minimum value). Why would this not work? e Describe and write pseudocode for an algorithm that would work. If there exists no path between s and t, then return oo.\nCS16 — Introduction to Algorithms and Data Structures",
+          "text": "Problem 4\nConsider the problem of finding the length of the longest path from a vertex s to a vertex t ina directed acyclic graph G = with edge-weights we.\ne Student A thinks that they can solve this problem using an altered Dijkstra\u2019s Algorithm that stores the maximum cost of each node and uses a maximum cost priority queue (a priority queue that returns the maximum value instead of the minimum value). Why would this not work? e Describe and write pseudocode for an algorithm that would work. If there exists no path between s and t, then return oo.\nCS16 \u2014 Introduction to Algorithms and Data Structures",
           "text_hash": "aa67e4e58554ca74",
           "image_crops": [
             "layout_debug/crops/hw3/ing_b8ee467de9e16552/q_2b227b844a530130_p005.png"
@@ -503,7 +339,7 @@
           "page_nums": [
             6
           ],
-          "text": "Problem 5\nConsider the following two algorithms, each of which takes an input graph, G = (V, E) with edge lengths v).\nAlgorithm A: This algorithm picks a random node s, runs Dijsktras algorithm on it to find dis- tances from s to all nodes, and retains the |V|/2 nodes that are closest to s [in the case of a tie, it chooses randomly.]. It then recursively calls itself on the graph consisting of these nearby nodes and all edges in E that join such nearby nodes. For a graph with a single vertex, the algorithm returns that node. This particular implementation of Dijkstra uses an array to represent the priority queue.\nAlgorithm B: The second algorithm sorts the edges by length, and returns the length of the median edge.\nWhat are the runtimes of each algorithm? For what kinds of graphs would Algorithm A be faster? Algorithm B? Briefly explain your answers.\nCS16 — Introduction to Algorithms and Data Structures",
+          "text": "Problem 5\nConsider the following two algorithms, each of which takes an input graph, G = (V, E) with edge lengths v).\nAlgorithm A: This algorithm picks a random node s, runs Dijsktras algorithm on it to find dis- tances from s to all nodes, and retains the |V|/2 nodes that are closest to s [in the case of a tie, it chooses randomly.]. It then recursively calls itself on the graph consisting of these nearby nodes and all edges in E that join such nearby nodes. For a graph with a single vertex, the algorithm returns that node. This particular implementation of Dijkstra uses an array to represent the priority queue.\nAlgorithm B: The second algorithm sorts the edges by length, and returns the length of the median edge.\nWhat are the runtimes of each algorithm? For what kinds of graphs would Algorithm A be faster? Algorithm B? Briefly explain your answers.\nCS16 \u2014 Introduction to Algorithms and Data Structures",
           "text_hash": "9a8d31c916793341",
           "image_crops": [
             "layout_debug/crops/hw3/ing_b8ee467de9e16552/q_4d1b23aabe3a3f58_p006.png"
@@ -517,7 +353,7 @@
           "page_nums": [
             7
           ],
-          "text": "Problem 6\nGiven an input string and a dictionary of words, develop an efficient algorithm to determine if the input string can be segmented into a space-separated sequence of dictionary words. There is no limit to the number of times you may use each word in the dictionary.\nFor example, suppose we have the following dictionary of known words:\nFor example, suppose we have the following dictionary of known words: dictionary = {\"i\", \"like\", \"ice\", \"cream\", \"icecream\", \"popsicle\"} Consider the following input/output pairs. Input: \"ilike\" Output: True We can segment the string into \"i like\" using words from the dictionary.\nWe can segment the string into \"i like\" using words from the dictionary.\nWe can represent the string as either \"i like icecream\" or \"i like ice cream.\"\nWe can’t segment the string into words contained in our dictionary. Note that a greedy approach will not always guarantee the correct solution! For example, consider the following test case:\ndictionary = {\"a\", \"an\", \"ill\", \"pill\", \"pillow\", \"case\"} Input: \"pillowcase\" Output: True We can segment the string into \"pillow case.\"\nIn this case, if we tried to find the first matching prefix, we would pick “pill.” However, that makes the rest of the string (“owcase”) unsegmentable given our dictionary.\nWrite pseudocode for your algorithm.\nCS16 — Introduction to Algorithms and Data Structures",
+          "text": "Problem 6\nGiven an input string and a dictionary of words, develop an efficient algorithm to determine if the input string can be segmented into a space-separated sequence of dictionary words. There is no limit to the number of times you may use each word in the dictionary.\nFor example, suppose we have the following dictionary of known words:\nFor example, suppose we have the following dictionary of known words: dictionary = {\"i\", \"like\", \"ice\", \"cream\", \"icecream\", \"popsicle\"} Consider the following input/output pairs. Input: \"ilike\" Output: True We can segment the string into \"i like\" using words from the dictionary.\nWe can segment the string into \"i like\" using words from the dictionary.\nWe can represent the string as either \"i like icecream\" or \"i like ice cream.\"\nWe can\u2019t segment the string into words contained in our dictionary. Note that a greedy approach will not always guarantee the correct solution! For example, consider the following test case:\ndictionary = {\"a\", \"an\", \"ill\", \"pill\", \"pillow\", \"case\"} Input: \"pillowcase\" Output: True We can segment the string into \"pillow case.\"\nIn this case, if we tried to find the first matching prefix, we would pick \u201cpill.\u201d However, that makes the rest of the string (\u201cowcase\u201d) unsegmentable given our dictionary.\nWrite pseudocode for your algorithm.\nCS16 \u2014 Introduction to Algorithms and Data Structures",
           "text_hash": "fdb5dd4f8bb886f5",
           "image_crops": [
             "layout_debug/crops/hw3/ing_b8ee467de9e16552/q_b6aab55e64fbe103_p007.png"
@@ -531,7 +367,7 @@
           "page_nums": [
             8
           ],
-          "text": "Problem 7\nWrite pseudocode for a method reverseList(head) that takes in the head of a singly linked-list and *reverses’ the list. Note that a singly linked-list is simply a linked list in which every node has a pointer to its next element in the list and the last node’s next pointer points to null. Example: Given a linked listA B > C D with head A the method turns it into the list! D+ C + B > A with head D. Explain the runtime of your solution.\nCS16 — Introduction to Algorithms and Data Structures",
+          "text": "Problem 7\nWrite pseudocode for a method reverseList(head) that takes in the head of a singly linked-list and *reverses\u2019 the list. Note that a singly linked-list is simply a linked list in which every node has a pointer to its next element in the list and the last node\u2019s next pointer points to null. Example: Given a linked listA B > C D with head A the method turns it into the list! D+ C + B > A with head D. Explain the runtime of your solution.\nCS16 \u2014 Introduction to Algorithms and Data Structures",
           "text_hash": "9f969cc95e7eff2a",
           "image_crops": [
             "layout_debug/crops/hw3/ing_b8ee467de9e16552/q_880e4b8419cc8737_p008.png"
@@ -545,24 +381,10 @@
           "page_nums": [
             9
           ],
-          "text": "Problem 8\nYou are given a non-empty stack S of integers. Write pseudocode for a method that sorts the stack in ascending order from the bottom-up (i.e. the bottom element is the smallest integer). You are allowed to use the push() , pop(), peek(), isEmpty() methods of a stack. You may use another stack in order to solve this problem, but you may not use other data structures in your solution. Hint : You can accomplish this by creating one more stack in your method, and transfer elements into the new stack each time checking that the transfer doesn’t violate the sort order. Example : Here’s a stack\n‘Your method should return a stack that looks like this:\n‘Your method should return a stack that looks like this: —4— — 3 — —2—\nCS16 — Introduction to Algorithms and Data Structures",
+          "text": "Problem 8\nYou are given a non-empty stack S of integers. Write pseudocode for a method that sorts the stack in ascending order from the bottom-up (i.e. the bottom element is the smallest integer). You are allowed to use the push() , pop(), peek(), isEmpty() methods of a stack. You may use another stack in order to solve this problem, but you may not use other data structures in your solution. Hint : You can accomplish this by creating one more stack in your method, and transfer elements into the new stack each time checking that the transfer doesn\u2019t violate the sort order. Example : Here\u2019s a stack\n\u2018Your method should return a stack that looks like this:\n\u2018Your method should return a stack that looks like this: \u20144\u2014 \u2014 3 \u2014 \u20142\u2014\nCS16 \u2014 Introduction to Algorithms and Data Structures",
           "text_hash": "e2694f87e462c0c7",
           "image_crops": [
             "layout_debug/crops/hw3/ing_b8ee467de9e16552/q_3795e8fa96cb2127_p009.png"
-          ],
-          "type": null,
-          "metadata": {}
-        },
-        {
-          "question_id": "q_d4a2982e7ed7fc6d",
-          "start_page": 10,
-          "page_nums": [
-            10
-          ],
-          "text": "Problem 9",
-          "text_hash": "892c4dd0acee3d76",
-          "image_crops": [
-            "layout_debug/crops/hw3/ing_b8ee467de9e16552/q_d4a2982e7ed7fc6d_p010.png"
           ],
           "type": null,
           "metadata": {}
@@ -601,7 +423,7 @@
           "page_nums": [
             10
           ],
-          "text": "3. Are there graphs where Dijkstra’s will fail? If so, explain why. If not, explain why not.",
+          "text": "3. Are there graphs where Dijkstra\u2019s will fail? If so, explain why. If not, explain why not.",
           "text_hash": "950422ce940afb38",
           "image_crops": [
             "layout_debug/crops/hw3/ing_b8ee467de9e16552/q_dc7eaa223f534862_p010.png"
@@ -629,10 +451,76 @@
           "page_nums": [
             10
           ],
-          "text": "5. What is the difference between online algorithms and offline algorithms? Give an example of a time that we have used each in class.\nCS16 — Introduction to Algorithms and Data Structures",
+          "text": "5. What is the difference between online algorithms and offline algorithms? Give an example of a time that we have used each in class.\nCS16 \u2014 Introduction to Algorithms and Data Structures",
           "text_hash": "e96302c1c90cb94b",
           "image_crops": [
             "layout_debug/crops/hw3/ing_b8ee467de9e16552/q_56be3c8c0b1ad0fb_p010.png"
+          ],
+          "type": null,
+          "metadata": {}
+        }
+      ]
+    },
+    {
+      "ingestion_id": "ing_e782e51dad87c0e4",
+      "created_at": "2026-04-09T00:19:25.978747Z",
+      "source_pdf": "exam_tests/hw3.pdf",
+      "exam_id": "hw3",
+      "questions": [
+        {
+          "question_id": "q_9ff2e8676c851381",
+          "start_page": 3,
+          "page_nums": [
+            3
+          ],
+          "text": "2. (20pts) Locating a Node by Implicit Position in a Pointer-Based Heap. Binary heaps are represented as arrays, where the node at position i has children at positions 2i + 1. Suppose instead that a binary heap is implemented as a binary tree with explicit left and right child pointers. Design an algorithm that, given an integer i, finds the node that would be at position i in the array representation. Assume the root is at position 1. a. (10pts) Provide an algorithm that runs in O(log i) time in the worst-case. Hint: Look at the binary representation of the index 1. After the first bit, how could the remaining bits serve as a \"map\" to tell you whether to turn left or right at each level?",
+          "text_hash": "d34ef532b075fca8",
+          "image_crops": [
+            "layout_debug/crops/hw3/ing_e782e51dad87c0e4/q_9ff2e8676c851381_p003.png"
+          ],
+          "type": null,
+          "metadata": {}
+        }
+      ]
+    },
+    {
+      "ingestion_id": "ing_41f9f125e2df1c96",
+      "created_at": "2026-04-09T00:19:47.272014Z",
+      "source_pdf": "exam_tests/ap.pdf",
+      "exam_id": "ap",
+      "questions": [
+        {
+          "question_id": "q_50df6577847e50a0",
+          "start_page": 5,
+          "page_nums": [
+            5,
+            6,
+            7,
+            8
+          ],
+          "text": "5. Consider the following output. 1 1 1 1 1 2 2 2 2 3 3 3 4 4 5\nConsider the following output. 1 1 1 1 1 2 2 2 2 3 3 3 4 4 5 Which of the following code segments will produce (a) for (int j = 1; <= 5; j++) { for (int k = 1; k <= 5; k++) { System.out.print(j + } System.out.println(); } for (int j = 1; j <= 5; j++) { for (int k = 1; k <= k++) { System.out.print(j + } System.out.println(); } (c) for (int j = 1; j <= 5; j++) { for (int k = 5; k >= 1; k--) { System.out.print(j + } System.out.println(); } for (int j = 1; j <= 5; j++) { for (int k = 5; k >= j; k--) { System.out.print(j + } System.out.println(); } for (int j = 1; j <= 5; j++) { for (int k = j; k <= 5; k++) { System.out.print(k + \" \"); }\nAcar dealership needs a program to store information about the cars for sale. For each car, they want to keep track of the following information: number of doors (2 or 4), whether the car has air conditioning, and its average number of miles per gallon. Which of the following is the best object-oriented program design? (a) Use one class, Car, with three instance variables: int numDoors, boolean hasAir, and double milesPerGallon. (8) Use four unrelated classes: Car, Doors, AirConditioning, and MilesPerGallon. (c) Useaclass Car with three subclasses: Doors, AirConditioning, and MilesPerGallon. Useaclass car, withasubclass Doors, with a subclass AirConditioning, MilesPerGallon. Use three classes: Doors, AirConditioning, and MilesPerGallon, each with a subclass car. Consider the following declarations. public interface Shape { int isLargerThan(Shape other) ; // Other methods not shown } public class Circle implements Shape { // Other methods not shown\nWhich of the following method headings of isLargerThan can be added to declaration of the Circle class so that it will satisfy the Shape interface?\nI. public int isLargerThan(Shape other) Il. public int isLargerThan(Circle other) Ill. public boolean other) (a) Ionly II only (c) Il only (p) II only (ce) I, II, and III\npublic class TimeRecord private int hours; private int minutes; // 0 < minutes < /** Constructs a TimeRecord object. * h the number of hours * Precondition: h > 0 m the number of minutes * Precondition: 0 < m < 60 */ public TimeRecord(int h, int m) { hours = h; minutes = m; } /** @xreturn the number of hours */ public int getHours() { /* implementation not shown */ } /** @return the number of minutes * 0 < minutes < 60 */ public int getMinutes() { /* implementation not shown */ } /** Adds h m minutes to this TimeRecord. * h the number of hours * Precondition: h > 0 m the number of minutes * Precondition: m > 0 */ public void advance(int h, int m) { hours = hours + h; minutes = minutes + m; /* missing code */ } // Other methods not shown\nWhich of the following can be used to replace /* missing code */ so that advance will correctly update the time? (aA) minutes = minutes % 60; minutes = minutes + hours % 60; hours = hours + minutes / 60; minutes = minutes % 60; (D) hours = hours + minutes % 60; minutes = minutes / 60; (E) hours = hours + minutes / 60; Consider the following declaration that appears in a class other than TimeRecord. TimeRecord[] timeCards = new TimeRecord[100]; Assume that timeCards has been initialized with TimeRecord objects. Consider the following code segment that is intended to compute the total of all the times stored in timeCards. TimeRecord total = new for (int k = 0; k < timeCards.length; k++) { /* missing expression */ ; } Which of the following can be used to replace /* missing expression */ so the code segment will work as intended? (a) timeCards [k] .advance () (B) total += timeCards[k] .advance() (\u00a9) total.advance (timeCards [k] .hours, timeCards [k] .minutes) total.advance (timeCards [k] .getHours(), timeCards [k] ) (E) timeCards [k] .advance (timeCards [k] .getHours(), timeCards [k] .getMinutes () )",
+          "text_hash": "e63a9ed2db950ca2",
+          "image_crops": [
+            "layout_debug/crops/ap/ing_41f9f125e2df1c96/q_50df6577847e50a0_p005.png",
+            "layout_debug/crops/ap/ing_41f9f125e2df1c96/q_50df6577847e50a0_p006.png",
+            "layout_debug/crops/ap/ing_41f9f125e2df1c96/q_50df6577847e50a0_p007.png",
+            "layout_debug/crops/ap/ing_41f9f125e2df1c96/q_50df6577847e50a0_p008.png"
+          ],
+          "type": null,
+          "metadata": {}
+        },
+        {
+          "question_id": "q_415cb377b0666f35",
+          "start_page": 9,
+          "page_nums": [
+            9,
+            10
+          ],
+          "text": "10. Consider the following instance variable and method. private int[] arr; /** Precondition: arr contains no duplicates; * the elements in arr are in ascending order. * @param low an int value suchthat 0 < low < arr.length * @param high an int value low - 1 < high < * @param num an int value */ public int mystery(int low, int high, int num) { int mid = (low + high) / 2; if (low > high) { return low; } else if (arr[mid] < num) { return mystery(mid + 1, high, num); } else if (arr[mid] > num) { return mystery(low, mid \u2014 1, num); } else // arr[mid] == num { return mid; } } What is returned by the call mystery(0, arr.length \u2014 1, num)? (a) The number of elements in arr that are less than num (8) The number of elements in arr that are less than or equal to num (c) The number of elements in arr that are equal to num (bp) The number of elements in arr that are greater than num\nQuestions 11-12 refer to the following information.\nConsider the following instance variable nums and method findLongest with line numbers added for reference. Method findLongest is intended to find the longest consecutive block of the value target occurring in the array nums; however, findLongest does not work as intended.\nFor example, if the array nums contains the values [7, 10, 10, 15, 15, 15, 15, 10, 10, 10, 15, 10, 10], the call findLongest (10) should return 3, the length of the longest consecutive block of 10s.\nprivate int[] nums; public int findLongest (int { int lenCount = 0; int maxLen = 0; Line 1: for (int val : nums) Line 2: { Line 3: if (val == target) Line 4: { Line 5: lencount++; Line 6: } Line 7: else Line 8: { Line 9: if (lenCount > Line 10: { Line 11: maxLen = lenCount; Line 12: } Line 13: } Line 14: } Line 15: if (lenCount > maxLen) Line 16: { Line 17: maxLen = lenCount; Line 18: } Line 19: return maxLen; }\npublic int findLongest (int target)",
+          "text_hash": "99c1c90ea3fd32cb",
+          "image_crops": [
+            "layout_debug/crops/ap/ing_41f9f125e2df1c96/q_415cb377b0666f35_p009.png",
+            "layout_debug/crops/ap/ing_41f9f125e2df1c96/q_415cb377b0666f35_p010.png"
           ],
           "type": null,
           "metadata": {}
