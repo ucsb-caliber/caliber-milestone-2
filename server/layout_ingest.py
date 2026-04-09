@@ -86,7 +86,8 @@ class Question:
 
     def add_block(self, block: Block):
         self.blocks.append(block)
-        self.text_units.append(block.text)
+        if block.text and block.text.strip():
+            self.text_units.append(block.text)
 
     @property
     def text(self) -> str:
@@ -225,10 +226,11 @@ def parse_page(layout: lp.Layout, page_img: Image.Image, page_num: int) -> List[
     page_blocks: List[Block] = []
     for b in layout:
         x1, y1, x2, y2 = map(int, b.block.coordinates)
+        btype = str(b.type)
         text = get_text_within_box(ocr_data, (x1, y1, x2, y2))
-        if not text:
+        if not text and btype.lower() != "figure":
             continue
-        page_blocks.append(Block(page=page_num, bbox=(x1, y1, x2, y2), text=text, btype=b.type))
+        page_blocks.append(Block(page=page_num, bbox=(x1, y1, x2, y2), text=text, btype=btype))
 
     return page_blocks
 
