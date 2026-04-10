@@ -53,8 +53,9 @@ QUESTIONS_DB_FILENAME = "questions.json"  # stored inside OUTPUT_DIR
 DEBUG = True
 DEBUG_DRAW_LAYOUT = False   # <-- IMPORTANT: avoids Pillow10 layoutparser crash
 
-BATCH_SIZE = 8        
+BATCH_SIZE = 4      
 
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 # ===================== QUESTION DETECTION =====================
 
 QUESTION_START_PATTERNS = [
@@ -66,7 +67,6 @@ QUESTION_START_PATTERNS = [
 
 QUESTION_START_RE = re.compile("|".join(QUESTION_START_PATTERNS), re.IGNORECASE)
 NUMBERED_ITEM_SPLIT_RE = re.compile(r"(?=\n?\s*\d+\s*[\.\)])")
-
 
 # ===================== DATA STRUCTURES =====================
 
@@ -242,7 +242,6 @@ def parse_page(layout: lp.Layout, page_img: Image.Image, page_num: int) -> List[
 
 def detect_batch(model : Any, images : List[Image.Image]) -> List[lp.Layout]:
     predictor = model.model # Underlying Detectron2 Model
-    device = predictor.model.device # Underlying Torch Model
 
     inputs = []
     for img in images:
@@ -251,7 +250,7 @@ def detect_batch(model : Any, images : List[Image.Image]) -> List[lp.Layout]:
 
         image = predictor.aug.get_transform(img_np).apply_image(img_np)
         image = torch.as_tensor(image.astype("float32").transpose(2, 0, 1))
-        image = image.to(device)
+        image = image.to(DEVICE)
 
         inputs.append({
             "image": image,
@@ -260,7 +259,7 @@ def detect_batch(model : Any, images : List[Image.Image]) -> List[lp.Layout]:
         })
 
     with torch.no_grad():
-        outputs = predictor.model(inputs)
+        outputs = predictor.model(inputs) # Underlying Torch model
 
     layouts = []
     for output in outputs:
@@ -339,49 +338,42 @@ def sort_layout_reading_order(layout: lp.Layout, y_tol: int) -> lp.Layout:
 
 def parse_pdf_to_questions(pages: List[Image.Image], model: Any) -> List[Question]:
     last_page = len(pages)
-    start = max(1, START_PAGE)
-    end = END_PAGE or last_page
-    end = min(end, last_page)
+    start = max(0, START_PAGE-1)
+    end = min(END_PAGE, last_page) if END_PAGE else last_page
     
     pages = pages[start: end]
 
     all_questions: List[Question] = []
     current_question: Optional[Question] = None
 
-    batchsize = min(BATCH_SIZE, len(pages))
-    batches = [pages[i: i+batchsize] for i in range(0, len(pages), batchsize)]
-    
+    outputs = []
+
+    for i in range(0, len(pages), BATCH_SIZE):
+        outputs.extend(model.detect_batch(pages[i: i+BATCH_SIZE]))
+
     layouts = []
+    for i, layout in enumerate(outputs):
+        page_num = start + i + 1
+        page_img = pages[i]
 
-    for batch in batches:
-        layouts.extend(model.detect_batch(batch))
+        if DEBUG and DEBUG_DRAW_LAYOUT:
+            Path("pages").mkdir(exist_ok=True)
+            save_path = os.path.join("pages", f"debug_page_{page_num}.png")
+            safe_draw_layout_debug(page_img, layout, save_path)
 
-    max_workers = max(1, (os.cpu_count() or 2) - 1)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = []
-        for i, layout in enumerate(layouts):
-            page_num = i+1
-            page_img = pages[i]
+        layouts.append(parse_page(layout, page_img, page_num))
 
-            if DEBUG and DEBUG_DRAW_LAYOUT:
-                Path("pages").mkdir(exist_ok=True)
-                save_path = os.path.join("pages", f"debug_page_{page_num}.png")
-                safe_draw_layout_debug(page_img, layout, save_path)
 
-            futures.append((page_num, executor.submit(parse_page, layout, page_img, page_num)))
-
-        futures.sort(key=lambda x: x[0])
-
-        for _, fut in futures:
-            for block in fut.result():
-                if is_question_start(block):
-                    if current_question is not None:
-                        all_questions.append(current_question)
-                    current_question = Question(start_page=block.page)
+    for page in layouts:
+        for block in page:
+            if block.btype in ['Text', 'Title'] and is_question_start(block):
+                if current_question is not None:
+                    all_questions.append(current_question)
+                current_question = Question(start_page=block.page)
+                current_question.add_block(block)
+            else:
+                if current_question is not None:
                     current_question.add_block(block)
-                else:
-                    if current_question is not None:
-                        current_question.add_block(block)
 
     if current_question is not None:
         all_questions.append(current_question)
@@ -540,6 +532,8 @@ def load_layout_model():
             ],
         )
         print("Done! (Detectron2 PubLayNet via HF)")
+        model.detect_batch = lambda imgs: detect_batch(model, imgs) 
+        model.model.model.to(DEVICE) # Move Torch model to device
         return model
     except Exception as e:
         print(f"[warn] Detectron2 (HF) failed: {e}")
@@ -564,9 +558,6 @@ def load_layout_model():
         )
 
     print("Done! (EfficientDet PubLayNet via HF)")
-
-    model.detect_batch = lambda imgs: detect_batch(model, imgs) 
-
     return model
 
 
