@@ -1,0 +1,246 @@
+# Backlog Item: Algorithm Problem Ingestion + Real-World Storyline Generator
+
+# User Story
+
+As an **instructor**, I want Caliber to **ingest algorithmic problems (e.g., LeetCode-style questions) and automatically generate a real-world storyline and contextualized problem statement**, so that students practice algorithms through **applied scenarios rather than abstract puzzles**.
+
+----------
+
+# Problem
+
+Many algorithm questions are written in a **highly abstract format**, which makes them harder for beginners to engage with and understand.
+
+Example:
+
+> Given an array of integers, return the two numbers whose sum equals a target.
+
+This format tests algorithmic reasoning but lacks context.
+
+By embedding problems into **real-world scenarios**, students can better understand:
+
+-   why the algorithm matters
+    
+-   how it applies to real systems
+    
+-   what the inputs represent
+    
+
+Example transformation:
+
+**Abstract**
+
+> Find two numbers that sum to a target.
+
+**Story-driven**
+
+> A warehouse robot is loading packages into a delivery truck. Each package has a weight, and the truck must carry exactly a certain weight to meet safety regulations. Write a function that finds two packages whose combined weight equals the truck’s required load.
+
+This improves **student engagement and comprehension**.
+
+----------
+
+# Scope
+
+The system will:
+
+1.  Import algorithm problems (metadata and description).
+    
+2.  Extract the **core algorithmic task**.
+    
+3.  Generate a **real-world scenario narrative**.
+    
+4.  Preserve the **exact algorithmic structure and constraints**.
+    
+5.  Produce a **new contextualized problem statement** for instructors.
+    
+
+The instructor can **review and edit the generated version before publishing**.
+
+----------
+
+# Functional Requirements
+
+## 1. Problem Ingestion
+
+System ingests:
+
+-   problem title
+    
+-   description
+    
+-   input format
+    
+-   output format
+    
+-   constraints
+    
+-   reference solution
+    
+
+Example source problem:
+
+```
+Two Sum
+
+Given an array of integers nums and an integer target,
+return indices of the two numbers such that they add up to target.
+
+```
+
+----------
+
+## 2. Algorithm Extraction
+
+AI identifies the underlying algorithmic structure:
+
+-   array search
+    
+-   hash map lookup
+    
+-   graph traversal
+    
+-   dynamic programming
+    
+-   sorting / greedy
+    
+-   binary search
+    
+
+This ensures the **storyline does not alter the computational problem**.
+
+----------
+
+## 3. Storyline Generation
+
+AI generates a contextual scenario using domains such as:
+
+-   logistics
+    
+-   finance
+    
+-   healthcare
+    
+-   robotics
+    
+-   social networks
+    
+-   cybersecurity
+    
+-   e-commerce
+    
+
+Example output:
+
+### Generated Scenario
+
+> A ride-sharing company needs to pair drivers so that their combined driving distance matches a target value required for route balancing.
+
+### Reformulated Problem
+
+> Given a list of driver distances and a target route length, return the indices of two drivers whose distances add up to the target.
+
+----------
+
+## 4. Structured Output
+
+Generated question should include:
+
+-   story-based introduction
+    
+-   clear problem definition
+    
+-   preserved constraints
+    
+-   examples
+    
+-   input/output description
+    
+
+Example output format:
+
+```
+Storyline:
+A delivery drone system must pair batteries to reach a required power level.
+
+Task:
+Given a list of battery capacities, find two batteries whose combined capacity equals the required power level.
+
+Input:
+vector<int> batteries
+int target
+
+Output:
+indices of the two batteries
+
+```
+
+----------
+
+# Instructor Workflow
+
+1.  Instructor imports or selects algorithm problem
+    
+2.  System generates **contextualized storyline**
+    
+3.  Instructor reviews generated problem
+    
+4.  Instructor edits narrative if needed
+    
+5.  Problem is saved in Caliber question bank
+    
+
+----------
+
+# Acceptance Criteria
+
+-   System can ingest algorithm problem text
+    
+-   AI generates a contextual scenario
+    
+-   Constraints and algorithmic structure remain unchanged
+    
+-   Output question is formatted for Caliber authoring
+    
+-   Instructor can edit before publishing
+    
+-   Generated problems integrate with coding question framework
+    
+
+----------
+
+# Non-Goals (Phase 1)
+    
+-   adaptive problem generation
+    
+-   student-personalized scenarios
+    
+
+----------
+
+# Future Enhancements
+
+-   generate **multiple scenario options**
+    
+-   adapt problems for different disciplines (CS, engineering, finance)
+    
+-   produce **visual diagrams for problems**
+    
+-   generate **hints and teaching explanations**
+    
+-   build a **large contextualized algorithm library**
+    
+
+----------
+
+# Dependencies
+
+-   problem ingestion pipeline
+    
+-   AI prompt pipeline
+    
+-   coding question framework
+    
+-   instructor authoring UI
+    
+
+    
