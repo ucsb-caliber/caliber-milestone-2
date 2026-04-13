@@ -1,4 +1,6 @@
 import os
+import io
+import base64
 import shutil
 import re
 import json
@@ -12,12 +14,9 @@ from typing import List, Tuple, Optional, Dict, Any
 import layoutparser as lp
 from pdf2image import convert_from_path
 from PIL import Image
-import pytesseract
-import concurrent.futures
 import matplotlib.pyplot as plt
 import torch
 import requests
-from pytesseract import Output
 
 
 
@@ -32,7 +31,7 @@ torch.load = torch_load_compat
 
 # ===================== CONFIG =====================
 
-PDF_PATH = "exam_tests/practicefinal2.pdf"
+PDF_PATH = "exam_tests/practicefinal3.pdf"
 OUTPUT_DIR = "layout_debug"
 
 START_PAGE = 1
@@ -49,18 +48,10 @@ QUESTIONS_DB_FILENAME = "questions.json"  # stored inside OUTPUT_DIR
 DEBUG = True
 DEBUG_DRAW_LAYOUT = False   # <-- IMPORTANT: avoids Pillow10 layoutparser crash
 
+# ===================== VLM CONFIG (Ollama) =====================
 
-# ===================== QUESTION DETECTION =====================
-
-QUESTION_START_PATTERNS = [
-    r"^\s*Problem\s+\d+\b",
-    r"^\s*Question\s+\d+\b",
-    r"^\s*Q\s*\d+\b",
-    r"^\s*\d+\.\s+.+[. ?:].*"
-]
-
-QUESTION_START_RE = re.compile("|".join(QUESTION_START_PATTERNS), re.IGNORECASE)
-NUMBERED_ITEM_SPLIT_RE = re.compile(r"(?=\n?\s*\d+\s*[\.\)])")
+OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
+OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5vl:7b")
 
 
 # ===================== DATA STRUCTURES =====================
@@ -170,10 +161,6 @@ def load_questions_db(db_path: Path) -> Dict[str, Any]:
         return {"schema_version": "1.0", "ingestions": []}
 
 
-def is_question_start(block: Block) -> bool:
-    return bool(QUESTION_START_RE.match(block.text.strip()))
-
-
 # -------------------- Debug drawing wrapper --------------------
 
 def safe_draw_layout_debug(page_img: Image.Image, layout: lp.Layout, save_path: str):
@@ -191,48 +178,38 @@ def safe_draw_layout_debug(page_img: Image.Image, layout: lp.Layout, save_path: 
         print(f"[warn] draw_box failed (Pillow/layoutparser compat): {e}")
 
 
-# ===================== OCR + PARSING =====================
+# ===================== VLM EXTRACTION =====================
 
-def get_text_within_box(ocr_data: Dict, bbox: Tuple[int, int, int, int], conf_thresh: int = 50) -> str:
-    x1, y1, x2, y2 = bbox
-    words = []
+def extract_question_with_vlm(crop: Image.Image) -> str:
+    buf = io.BytesIO()
+    crop.save(buf, format="PNG")
+    b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
 
-    for i in range(len(ocr_data["text"])):
-        try:
-            conf = float(ocr_data["conf"][i])
-        except Exception:
-            conf = -1
-        if conf < conf_thresh:
-            continue
-
-        cx = ocr_data["left"][i] + ocr_data["width"][i] / 2
-        cy = ocr_data["top"][i] + ocr_data["height"][i] / 2
-
-        if x1 <= cx <= x2 and y1 <= cy <= y2:
-            w = ocr_data["text"][i]
-            if w:
-                words.append(w)
-
-    return " ".join(words).strip()
-
-
-def parse_page(layout: lp.Layout, page_img: Image.Image, page_num: int) -> List[Block]:
-    ocr_data = pytesseract.image_to_data(
-        page_img,
-        output_type=Output.DICT,
-        config="--oem 3 --psm 6 -l eng"
+    prompt = (
+        "You are extracting an exam question from a cropped image of a scanned document. "
+        "Return the complete question content exactly as it appears, formatted in Markdown. "
+        "Preserve all mathematical notation, sub-parts (a, b, c...), tables, and lists. "
+        "If there is a figure or diagram, describe it briefly in italics. "
+        "Return only the Markdown — no preamble, no commentary."
     )
 
-    page_blocks: List[Block] = []
-    for b in layout:
-        x1, y1, x2, y2 = map(int, b.block.coordinates)
-        btype = str(b.type)
-        text = get_text_within_box(ocr_data, (x1, y1, x2, y2))
-        if not text and btype.lower() != "figure":
-            continue
-        page_blocks.append(Block(page=page_num, bbox=(x1, y1, x2, y2), text=text, btype=btype))
+    payload = {
+        "model": OLLAMA_MODEL,
+        "messages": [{"role": "user", "content": prompt, "images": [b64]}],
+        "stream": False,
+    }
 
-    return page_blocks
+    try:
+        resp = requests.post(f"{OLLAMA_URL}/api/chat", json=payload, timeout=120)
+        resp.raise_for_status()
+    except requests.exceptions.ConnectionError:
+        raise RuntimeError(
+            f"Could not connect to Ollama at {OLLAMA_URL}. "
+            "Make sure Ollama is running (`ollama serve`) and the model is pulled "
+            f"(`ollama pull {OLLAMA_MODEL}`)."
+        )
+
+    return resp.json()["message"]["content"].strip()
 
 
 # ===================== LAYOUT FORMATTING =====================
@@ -296,37 +273,32 @@ def parse_pdf_to_questions(pages: List[Image.Image], model: Any) -> List[Questio
     all_questions: List[Question] = []
     current_question: Optional[Question] = None
 
-    max_workers = max(1, (os.cpu_count() or 2) - 1)
+    for page_idx in range(start - 1, end):
+        page_num = page_idx + 1
+        page_img = pages[page_idx]
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = []
-        for page_idx in range(start - 1, end):
-            page_num = page_idx + 1
-            page_img = pages[page_idx]
+        layout = model.detect(page_img)
+        layout = keep_largest_blocks(layout, threshold=0.9)
+        layout = sort_layout_reading_order(layout, Y_TOL)
 
-            layout = model.detect(page_img)
-            layout = keep_largest_blocks(layout, threshold=0.9)
-            layout = sort_layout_reading_order(layout, Y_TOL)
+        if DEBUG and DEBUG_DRAW_LAYOUT:
+            Path("pages").mkdir(exist_ok=True)
+            save_path = os.path.join("pages", f"debug_page_{page_num}.png")
+            safe_draw_layout_debug(page_img, layout, save_path)
 
-            if DEBUG and DEBUG_DRAW_LAYOUT:
-                Path("pages").mkdir(exist_ok=True)
-                save_path = os.path.join("pages", f"debug_page_{page_num}.png")
-                safe_draw_layout_debug(page_img, layout, save_path)
+        for b in layout:
+            x1, y1, x2, y2 = map(int, b.block.coordinates)
+            btype = str(b.type)
+            block = Block(page=page_num, bbox=(x1, y1, x2, y2), text="", btype=btype)
 
-            futures.append((page_num, executor.submit(parse_page, layout, page_img, page_num)))
-
-        futures.sort(key=lambda x: x[0])
-
-        for _, fut in futures:
-            for block in fut.result():
-                if is_question_start(block):
-                    if current_question is not None:
-                        all_questions.append(current_question)
-                    current_question = Question(start_page=block.page)
+            if btype.lower() == "title":
+                if current_question is not None:
+                    all_questions.append(current_question)
+                current_question = Question(start_page=page_num)
+                current_question.add_block(block)
+            else:
+                if current_question is not None:
                     current_question.add_block(block)
-                else:
-                    if current_question is not None:
-                        current_question.add_block(block)
 
     if current_question is not None:
         all_questions.append(current_question)
@@ -352,6 +324,7 @@ def crop_and_output_questions(pages: List[Image.Image], questions: List[Question
 
     for q in questions:
         per_page = q.bboxes_by_page()
+        page_markdowns: List[str] = []
 
         for page_num, bbox in sorted(per_page.items()):
             page_img = pages[page_num - 1]
@@ -374,6 +347,12 @@ def crop_and_output_questions(pages: List[Image.Image], questions: List[Question
                 plt.axis("off")
                 plt.title(f"{q.question_id} (page {page_num})")
                 plt.show()
+
+            md = extract_question_with_vlm(crop)
+            page_markdowns.append(md)
+
+        if page_markdowns:
+            q.text_units = ["\n\n".join(page_markdowns)]
 
 
 # ===================== DB APPEND =====================
@@ -540,11 +519,6 @@ def main():
     questions = parse_pdf_to_questions(pages, model)
 
     for i, q in enumerate(questions, 1):
-        if DEBUG:
-            with open("Output.txt", "a") as text_file:
-                text_file.write(f"{q.text}\n")
-                text_file.write("=====" * 20 + "\n")
-
         q.question_id = make_question_id(exam_id=exam_id, ingestion_id=ingestion_id, question_index=i)
         q.qtype = None
         q.metadata = {}
@@ -552,16 +526,22 @@ def main():
     print(f"\nDetected {len(questions)} questions")
     print(f"exam_id={exam_id}")
     print(f"ingestion_id={ingestion_id}\n")
+    print("Sending crops to VLM...")
+
+    crops_dir = Path(OUTPUT_DIR) / "crops" / exam_id / ingestion_id
+    crop_and_output_questions(pages, questions, crops_dir=crops_dir)
 
     for i, q in enumerate(questions, 1):
+        if DEBUG:
+            with open("Output.txt", "a") as text_file:
+                text_file.write(f"{q.text}\n")
+                text_file.write("=====" * 20 + "\n")
+
         preview = q.text.replace("\n", " ")
         if len(preview) > 220:
             preview = preview[:220] + "..."
         print(f"[{i:02d}] {q.question_id} start_page={q.start_page} pages={q.page_nums()}")
         print(f"     {preview}\n")
-
-    crops_dir = Path(OUTPUT_DIR) / "crops" / exam_id / ingestion_id
-    crop_and_output_questions(pages, questions, crops_dir=crops_dir)
 
     db_path = Path(OUTPUT_DIR) / QUESTIONS_DB_FILENAME
     append_ingestion_to_db(

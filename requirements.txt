@@ -8,9 +8,8 @@ regex==2024.11.6
 ujson==5.11.0
 
 # ---------------------------
-# OCR + PDF
+# PDF
 # ---------------------------
-pytesseract==0.3.13
 pdf2image==1.17.0
 pdfminer.six==20231228
 pdfplumber==0.11.5
