@@ -1,88 +1,63 @@
-````md
 # Caliber Milestone 2
 
 This repository contains a Python pipeline to:
 
-1. Parse a PDF exam into structured **question text** using layout detection + OCR  
-2. Save question metadata and optional image crops to a JSON database  
-3. (Optional) Embed extracted questions downstream  
+1. Parse a PDF exam into structured **question text** using layout detection + a local VLM (via Ollama)
+2. Save question metadata and image crops to a JSON database
+3. (Optional) Embed extracted questions downstream
 
-The pipeline can be run **locally** or **via Docker (recommended for consistency)**.
-
----
-
-## Recommended: Run with Docker (Cross-platform, reproducible)
-
-Docker avoids OS-specific issues with:
-- Tesseract / Poppler installation
-- PyTorch + Detectron2 compatibility
-- macOS vs Windows vs Linux differences
-
-### Prerequisites
-- Docker Desktop installed  
-  https://www.docker.com/products/docker-desktop/
+Layout detection identifies question boundaries. Crops of each question are sent to a local vision language model (VLM) which returns the content as structured Markdown — replacing traditional OCR.
 
 ---
 
-### Build the Docker image
+## Prerequisites
 
-From the repo root:
+### 1. Ollama (local VLM)
+
+Install Ollama: https://ollama.com
+
+Pull the vision model:
 
 ```bash
-docker build -t caliber-layout-ingest .
-````
+ollama pull qwen2.5vl:7b
+```
 
----
-
-### Run the pipeline in Docker
+Start the server (runs in background):
 
 ```bash
-docker run --rm -it \
-  -v "$PWD:/app" \
-  caliber-layout-ingest
+ollama serve
 ```
 
-You’ll be prompted:
-
-```text
-Enter exam id:
-```
-
-Example:
-
-```text
-hw3
-```
-
-Outputs (JSON + crops) are written to:
-
-```text
-layout_debug/
-```
-
-because the repo is mounted into the container.
-
----
-
-### Optional Docker flags
-
-Disable crop display (recommended in Docker):
+To use a different model:
 
 ```bash
-docker run --rm -it \
-  -v "$PWD:/app" \
-  -e SHOW_CROPS=0 \
-  caliber-layout-ingest
+export OLLAMA_MODEL=llava
+```
+
+To point at a remote Ollama instance:
+
+```bash
+export OLLAMA_URL=http://your-host:11434
 ```
 
 ---
 
-## Local Setup (macOS & Windows)
+### 2. Poppler (PDF rendering)
 
-> ⚠️ Local setup is more fragile due to system dependencies.
-> Use Docker unless you explicitly need a local environment.
+**macOS**
+
+```bash
+brew install poppler
+```
+
+**Windows**
+
+- Download: https://github.com/oschwartz10612/poppler-windows/releases
+- Extract and add `bin/` folder to PATH
 
 ---
+
+## Setup
 
 ### 1. Create a virtual environment
 
@@ -93,22 +68,14 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-**Windows (PowerShell)**
+**Windows**
 
 ```powershell
 python -m venv .venv
 .venv\Scripts\activate
 ```
 
-Upgrade pip:
-
-```bash
-python -m pip install --upgrade pip
-```
-
----
-
-### 2. Install Python dependencies
+### 2. Install dependencies
 
 ```bash
 pip install -r requirements.txt
@@ -116,141 +83,101 @@ pip install -r requirements.txt
 
 ---
 
-## System Dependencies (Local Only)
-
-This project uses **OCR and PDF rendering**, which require system tools.
-
----
-
-### macOS (Homebrew)
-
-Install Homebrew if needed: [https://brew.sh](https://brew.sh)
-
-```bash
-brew install poppler tesseract
-```
-
-Verify:
-
-```bash
-which pdfinfo
-which tesseract
-```
-
----
-
-### Windows
-
-#### Install Poppler
-
-* Download:
-  [https://github.com/oschwartz10612/poppler-windows/releases](https://github.com/oschwartz10612/poppler-windows/releases)
-* Extract (e.g. `C:\poppler`)
-* Add `C:\poppler\Library\bin` to **PATH**
-
-Verify:
-
-```powershell
-pdfinfo -v
-```
-
----
-
-#### Install Tesseract
-
-* Download:
-  [https://github.com/UB-Mannheim/tesseract/wiki](https://github.com/UB-Mannheim/tesseract/wiki)
-* During install, **check “Add to PATH”**
-
-Verify:
-
-```powershell
-tesseract --version
-```
-
----
-
-## Running the Pipeline (Local)
+## Running the Pipeline
 
 From the repo root:
 
 ```bash
-python server/layout_ingest.py
+MPLBACKEND=Agg python server/layout_ingest.py
 ```
 
-You’ll be prompted:
+You'll be prompted:
 
 ```text
 Enter exam id:
 ```
 
-Example:
-
-```text
-practicefinal3
-```
+Outputs (JSON + crops) are written to `layout_debug/`.
 
 ---
 
 ## Configuration
 
-### Change input PDF
+All config lives at the top of `server/layout_ingest.py`:
 
-In `server/layout_ingest.py`:
+| Variable | Default | Description |
+|---|---|---|
+| `PDF_PATH` | `exam_tests/practicefinal3.pdf` | Input PDF |
+| `START_PAGE` | `1` | First page to process |
+| `END_PAGE` | `10` | Last page to process (0 = all) |
+| `OLLAMA_URL` | `http://localhost:11434` | Ollama server URL (env-overridable) |
+| `OLLAMA_MODEL` | `qwen2.5vl:7b` | Vision model to use (env-overridable) |
+| `SAVE_CROPS` | `True` | Save question crop images |
+| `SHOW_CROPS` | `True` | Display crops (set False for headless) |
 
-```python
-PDF_PATH = "exam_tests/practicefinal3.pdf"
+---
+
+## How It Works
+
+1. **Layout detection** — EfficientDet/Detectron2 (PubLayNet) detects block bounding boxes and types (`Title`, `Text`, `List`, `Figure`, `Table`)
+2. **Question grouping** — `Title` blocks mark question boundaries; subsequent blocks accumulate under the current question
+3. **Cropping** — The merged bounding box of each question is cropped from the page image
+4. **VLM extraction** — Each crop is sent to Ollama as a base64 PNG; the model returns the question content as Markdown
+5. **Storage** — Questions are written to `layout_debug/questions.json` with IDs, page numbers, crop paths, and Markdown text
+
+---
+
+## Output Format
+
+`layout_debug/questions.json`:
+
+```json
+{
+  "schema_version": "1.0",
+  "ingestions": [
+    {
+      "ingestion_id": "ing_...",
+      "exam_id": "practicefinal3",
+      "questions": [
+        {
+          "question_id": "q_...",
+          "start_page": 1,
+          "page_nums": [1, 2],
+          "text": "## Problem 1\n\nFor each of the following...",
+          "image_crops": ["layout_debug/crops/.../q_..._p001.png"],
+          "type": null,
+          "metadata": {}
+        }
+      ]
+    }
+  ]
+}
 ```
 
 ---
 
-### Change page range
-
-```python
-START_PAGE = 1
-END_PAGE = 10
-```
-
----
-
-### Disable crop display
-
-```python
-SHOW_CROPS = False
-```
-
-Or (Docker-friendly):
+## Docker
 
 ```bash
-export SHOW_CROPS=0
+docker build -t caliber-layout-ingest .
+
+docker run --rm -it \
+  -v "$PWD:/app" \
+  caliber-layout-ingest
 ```
 
----
-
-## Notes
-
-* Docker uses **CPU-only execution** by default.
-* Detectron2 is preferred when available; EfficientDet is used as a fallback.
-* All outputs are deterministic when run in Docker.
+> Note: Ollama must be accessible from within the container. Set `OLLAMA_URL` to your host IP if running Ollama on the host machine.
 
 ---
 
 ## Troubleshooting
 
-If something works locally but not in Docker:
+**"Could not connect to Ollama"** — Make sure `ollama serve` is running and the model is pulled.
 
-* Rebuild with no cache:
+**Detectron2 warning on startup** — Normal. The pipeline falls back to EfficientDet automatically.
 
-  ```bash
-  docker build --no-cache -t caliber-layout-ingest .
-  ```
+**Rebuild Docker with no cache:**
 
-* Ensure you removed any OS-specific shell calls (`ip route`, etc.).
-
-* Ensure there is **no local file named `layoutparser.py`** (this breaks imports).
-
----
-
-
-```
+```bash
+docker build --no-cache -t caliber-layout-ingest .
 ```
