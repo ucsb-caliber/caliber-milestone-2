@@ -27,11 +27,21 @@ class PythonIntroPolicy:
         t = (original_text or "").lower()
         if not re.search(r"(?:^|\n|\s)(?:[A-E]|[1-5])[\.\)]\s+\w+", original_text or ""):
             return False
+        # "method reverseList(head)" on a linked list is not a built-in list.append-style MCQ.
+        if re.search(r"linked[\s-]*list|singly[\s-]*linked", t):
+            return False
+        compact = re.sub(r"\s+", "", t)
+        if "reverselist" in compact:
+            return False
         return (
             "list method" in t
-            or ("method" in t and "list" in t)
             or "elements to a list" in t
             or ("to a list" in t and "method" in t)
+            or (
+                "method" in t
+                and "list" in t
+                and "linked" not in t
+            )
         )
 
     @staticmethod

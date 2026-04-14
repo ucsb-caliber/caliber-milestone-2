@@ -688,5 +688,28 @@
     "answer": "A",
     "scenario_domain": "Computer science course (same domain as the original)",
     "scenario_style": "conceptual"
+  },
+  {
+    "original_id": "q_exam_practicefinal2_013_4c2fbd825b16441b",
+    "source_ingestion_id": "ing_exam_tests_practicefinal2",
+    "source_ingestion_index": 8,
+    "type": "MCQ",
+    "language": "python",
+    "question_mode": "algorithmic",
+    "routing": "rules",
+    "algorithm": "class design / OOP",
+    "storyline": "Imagine you are planning a multi-city trip for a group of friends. You need to decide how to book flights and manage layovers efficiently.",
+    "task": "What is the difference between online algorithms and offline algorithms in the context of travel planning? Provide an example of a situation where each type could be applied.",
+    "constraints": "",
+    "question": "What is the difference between online algorithms and offline algorithms in the context of travel planning? Provide an example of a situation where each type could be applied.",
+    "options": {
+      "A": "Online algorithms make decisions based on current information, while offline algorithms use complete information available beforehand. An example of an online algorithm is booking a flight as you check prices, while an offline algorithm is planning an entire itinerary based on a list of all available flights.",
+      "B": "Online algorithms require all data to be available at once, while offline algorithms can process data in real-time. An example of an online algorithm is calculating the fastest route during a trip using GPS, while an offline algorithm is selecting the best travel route based on historical traffic data.",
+      "C": "Online algorithms are used only for short trips, while offline algorithms are used for long journeys. An example of an online algorithm is booking a hotel on the go, while an offline algorithm is creating a travel guide for a month-long vacation.",
+      "D": "Online algorithms cannot adapt to changing conditions, while offline algorithms can. An example of an online algorithm is deciding on a layover city based on flight availability at the moment, while an offline algorithm is planning all layovers in advance based on a fixed schedule."
+    },
+    "answer": "A",
+    "scenario_domain": "Travel & Navigation",
+    "scenario_style": "reskin"
   }
 ]

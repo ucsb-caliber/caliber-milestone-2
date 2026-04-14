@@ -91,12 +91,33 @@ def should_use_vision(q_data: Dict[str, Any]) -> bool:
     return True
 
 
+def _looks_like_numbered_written_subproblems(text: str) -> bool:
+    """Multi-part exam prompts use '1. Foo 2. Bar' like MCQ option lines — treat as written, not MCQ."""
+    t = (text or "").lower()
+    numbered = len(re.findall(r"(?:^|\n)\s*\d+\.\s+\S", text or ""))
+    if numbered < 2:
+        return False
+    if "for each of the following" in t:
+        return True
+    if ("worst-case runtime" in t or "worst case runtime" in t) and (
+        "explanation" in t or "brief" in t or "sentence" in t
+    ):
+        return True
+    if "give a" in t and "runtime" in t and ("explanation" in t or "brief" in t):
+        return True
+    return False
+
+
 def detect_format(text: str) -> str:
     text_lower = text.lower()
     if "true" in text_lower and "false" in text_lower:
         if len(text) < 200 or "select" in text_lower:
             return "TRUE_FALSE"
+    if re.search(r"write\s+pseudocode", text_lower):
+        return "FREE_RESPONSE"
     has_mcq = re.search(r"(?:^|\n|\s)(?:[A-E]|[1-5])[\.\)]\s+\w+", text)
+    if has_mcq and _looks_like_numbered_written_subproblems(text):
+        return "FREE_RESPONSE"
     if has_mcq:
         return "MCQ"
     # Scanned exams: "o  A   option text" or letter on its own line without \w+ immediately after
