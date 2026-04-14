@@ -113,7 +113,11 @@ def detect_format(text: str) -> str:
     if "true" in text_lower and "false" in text_lower:
         if len(text) < 200 or "select" in text_lower:
             return "TRUE_FALSE"
-    if re.search(r"write\s+pseudocode", text_lower):
+    # Coding / written tasks often include numbered lines or lettered bullets; classify before MCQ heuristics.
+    if re.search(
+        r"\b(?:write\s+pseudocode|write\s+a\s+(?:function|class|method)|recursive\s+function)\b",
+        text_lower,
+    ):
         return "FREE_RESPONSE"
     has_mcq = re.search(r"(?:^|\n|\s)(?:[A-E]|[1-5])[\.\)]\s+\w+", text)
     if has_mcq and _looks_like_numbered_written_subproblems(text):
