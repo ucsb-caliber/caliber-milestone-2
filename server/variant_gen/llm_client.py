@@ -1,0 +1,129 @@
+"""OpenRouter chat completions; JSON in/out for generate + verify steps."""
+
+import base64
+import json
+import os
+import re
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+import requests
+
+from .config import BASE_TEMPERATURE, DEBUG, OPENROUTER_URL, openrouter_vision_enabled, resolved_openrouter_model
+
+_IMAGE_MIME = {
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
+}
+
+
+def encode_image(path: Path | str, data_url: bool = False) -> Optional[str]:
+    p = Path(path)
+    if not p.exists():
+        return None
+    with open(p, "rb") as f:
+        b64 = base64.b64encode(f.read()).decode("ascii")
+    if not data_url:
+        return b64
+    mime = _IMAGE_MIME.get(p.suffix.lower(), "image/png")
+    return f"data:{mime};base64,{b64}"
+
+
+def parse_llm_json(content: Optional[str]) -> Optional[Dict[str, Any]]:
+    if not content or not isinstance(content, str):
+        return None
+    s = content.strip()
+    if s.startswith("```"):
+        s = re.sub(r"^```(?:json)?\s*", "", s, flags=re.IGNORECASE)
+        s = re.sub(r"\s*```\s*$", "", s)
+    try:
+        return json.loads(s)
+    except json.JSONDecodeError as e:
+        print(f"  Model returned invalid JSON: {e}")
+        if DEBUG:
+            print(f"[DEBUG] Raw content was: {content[:2000]}")
+        return None
+
+
+def _openrouter_chat(
+    prompt: str,
+    image_paths: List[Path],
+    temp: float,
+    model: str,
+) -> Optional[Dict[str, Any]]:
+    key = os.getenv("OPENROUTER_API_KEY", "").strip()
+    if not key:
+        print("  OPENROUTER_API_KEY is not set.")
+        return None
+
+    if image_paths:
+        parts: List[Dict[str, Any]] = [{"type": "text", "text": prompt}]
+        for p in image_paths:
+            url = encode_image(p, data_url=True)
+            if url:
+                parts.append({"type": "image_url", "image_url": {"url": url}})
+        user_content: Any = parts
+    else:
+        user_content = prompt
+
+    headers = {
+        "Authorization": f"Bearer {key}",
+        "Content-Type": "application/json",
+    }
+    ref = os.getenv("OPENROUTER_HTTP_REFERER", "").strip()
+    if ref:
+        headers["HTTP-Referer"] = ref
+    title = os.getenv("OPENROUTER_APP_TITLE", "").strip()
+    if title:
+        headers["X-Title"] = title
+
+    payload = {
+        "model": model,
+        "messages": [{"role": "user", "content": user_content}],
+        "temperature": temp,
+        "response_format": {"type": "json_object"},
+    }
+    try:
+        response = requests.post(OPENROUTER_URL, json=payload, headers=headers, timeout=120)
+        if not response.ok:
+            try:
+                err = response.json()
+                detail = err.get("error", err)
+            except Exception:
+                detail = response.text[:500]
+            print(f"  OpenRouter HTTP {response.status_code}: {detail}")
+            return None
+        data = response.json()
+        content = (data.get("choices") or [{}])[0].get("message", {}).get("content")
+        if DEBUG:
+            print(f"[DEBUG] Raw response: {content}")
+        return parse_llm_json(content)
+    except requests.Timeout:
+        print("  Request timed out (120s).")
+        return None
+    except Exception as e:
+        print(f"  Unexpected error: {type(e).__name__}: {e}")
+        return None
+
+
+def call_llm(
+    prompt: str,
+    *,
+    image_paths: Optional[List[Path | str]] = None,
+    temperature: Optional[float] = None,
+    model: Optional[str] = None,
+) -> Optional[Dict[str, Any]]:
+    """Generate or verify: JSON object in, JSON object out. Uses OpenRouter only."""
+    paths = [Path(x) for x in (image_paths or []) if x]
+    temp = temperature if temperature is not None else BASE_TEMPERATURE
+    mid = model or resolved_openrouter_model()
+    if DEBUG:
+        print(f"\n[DEBUG] Calling OpenRouter model: {mid}")
+    return _openrouter_chat(prompt, paths, temp, mid)
+
+
+def text_model_supports_images() -> bool:
+    return openrouter_vision_enabled()

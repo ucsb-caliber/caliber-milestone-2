@@ -1,5 +1,6 @@
 import ast
 import re
+from typing import Optional
 
 
 class PythonIntroPolicy:
@@ -80,7 +81,7 @@ class PythonIntroPolicy:
         variant["correct_answer"] = normalize_answer(pick)
         return normalize_answer(old) != normalize_answer(variant["correct_answer"])
 
-    def validate_list_method_mcq(self, variant: dict, original_text: str, vt_lower: str, mcq_correct_option_label) -> str | None:
+    def validate_list_method_mcq(self, variant: dict, original_text: str, vt_lower: str, mcq_correct_option_label) -> Optional[str]:
         if not self.original_suggests_list_method_mcq(original_text):
             return None
         opts = variant.get("options")

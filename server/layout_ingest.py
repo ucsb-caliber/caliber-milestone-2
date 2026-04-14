@@ -32,7 +32,7 @@ torch.load = torch_load_compat
 
 # ===================== CONFIG =====================
 
-PDF_PATH = "exam_tests/practicefinal2.pdf"
+PDF_PATH = "exam_tests/c.pdf"
 OUTPUT_DIR = "layout_debug"
 
 START_PAGE = 1

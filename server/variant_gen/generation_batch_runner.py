@@ -1,13 +1,23 @@
 """
-Full-ingestion batch: generate variants for all questions, append to layout_debug/variants.json.
+Full-ingestion batch: generate variants for all questions in one ingestion, append to
+exam_tests/variants.json (by default).
 
 From the server directory:
 
   python -m variant_gen.generation_batch_runner
+  python -m variant_gen.generation_batch_runner --exam-id practice-final
+  python -m variant_gen.generation_batch_runner --ingestion 1
+
+``--exam-id`` picks the ingestion whose ``exam_id`` matches (last match wins if duplicated).
+Otherwise ``--ingestion`` is the 0-based index among ingestions (one per exam_tests PDF by default;
+``-1`` = last).
+
+Optional ``--db`` points at a layout ``questions.json`` export; default is PDFs in ``exam_tests/``.
 
 Or use VS Code / Cursor "Run Python File" on this module — the path bootstrap below makes that work.
 """
 
+import argparse
 import json
 import os
 import sys
@@ -19,9 +29,11 @@ if __name__ == "__main__":
     if str(_server_dir) not in sys.path:
         sys.path.insert(0, str(_server_dir))
 
-from variant_gen import DB_PATH, generate_variant
+from variant_gen import EXAM_TESTS_DIR, generate_variant
+from variant_gen.exam_tests_questions import load_questions_database
+from variant_gen.ingestion_resolve import resolve_ingestion_index
 
-OUTPUT_PATH = DB_PATH.parent / "variants.json"
+OUTPUT_PATH = EXAM_TESTS_DIR / "variants.json"
 
 DEBUG_BATCH = False
 
@@ -44,16 +56,50 @@ def save_atomic(data, path):
 
 
 def main():
-    if not DB_PATH.exists():
-        print(f"Error: Input file not found at {DB_PATH}")
+    ap = argparse.ArgumentParser(description="Batch variant generation for one ingestion.")
+    ap.add_argument(
+        "--db",
+        type=Path,
+        default=None,
+        help="optional questions.json path; default is exam_tests PDFs or VARIANT_GEN_QUESTIONS_JSON",
+    )
+    ap.add_argument(
+        "--ingestion",
+        type=int,
+        default=0,
+        help="0-based ingestion index (-1=last; default 0); ignored if --exam-id is set",
+    )
+    ap.add_argument(
+        "--exam-id",
+        default=None,
+        metavar="ID",
+        help="select ingestion by exam_id (exact match; last match wins); overrides --ingestion",
+    )
+    args = ap.parse_args()
+
+    try:
+        source_data = load_questions_database(args.db)
+    except (OSError, json.JSONDecodeError, ValueError) as e:
+        print(f"Error loading questions: {e}")
         return
 
-    print(f"Loading questions from: {DB_PATH}")
+    ingestions = source_data["ingestions"]
+    try:
+        ing_idx = resolve_ingestion_index(
+            ingestions,
+            exam_id=args.exam_id,
+            ingestion_index=args.ingestion,
+        )
+    except (ValueError, IndexError) as e:
+        print(f"Error: {e}")
+        return
 
-    with open(DB_PATH, "r", encoding="utf-8") as f:
-        source_data = json.load(f)
-
-    questions = source_data["ingestions"][-1]["questions"]
+    active = ingestions[ing_idx]
+    questions = active["questions"]
+    print(
+        f"Ingestion [{ing_idx}] exam_id={active.get('exam_id', '?')} "
+        f"id={active.get('ingestion_id', '?')} source={active.get('source_pdf', '?')}"
+    )
     total_questions = len(questions)
 
     existing_results = load_json_safe(OUTPUT_PATH)
@@ -88,7 +134,12 @@ def main():
         try:
             start_time = time.time()
 
-            variant = generate_variant(i, db_path=DB_PATH)
+            variant = generate_variant(
+                i,
+                db_path=args.db,
+                ingestion_index=ing_idx,
+                questions_db=source_data,
+            )
 
             duration = time.time() - start_time
 
