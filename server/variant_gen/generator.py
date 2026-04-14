@@ -12,7 +12,15 @@ Supporting modules:
 
 from pathlib import Path
 
-from .config import BASE_TEMPERATURE, DB_PATH, DEBUG, MAX_RETRIES, resolved_openrouter_model
+from .config import (
+    BASE_TEMPERATURE,
+    DB_PATH,
+    DEBUG,
+    MAX_RETRIES,
+    generation_source_max_chars,
+    openrouter_timeout_verify,
+    resolved_openrouter_model,
+)
 from .exam_tests_questions import load_questions_database
 from .llm_client import call_llm, text_model_supports_images
 from .prompts import build_generation_prompt, build_verify_prompt
@@ -32,6 +40,18 @@ from .variant_validation import (
     similarity_threshold_for_original,
     count_options,
 )
+
+
+def _clip_text_for_generation(text: str, limit: int) -> str:
+    t = text or ""
+    if len(t) <= limit:
+        return t
+    head = (limit * 2) // 3
+    tail = limit - head - 80
+    if tail < 2000:
+        tail = 2000
+        head = limit - tail - 80
+    return t[:head] + "\n\n[... source truncated ...]\n\n" + t[-tail:]
 
 
 def generate_variant(index, db_path=None, ingestion_index=-1, questions_db=None):
@@ -83,11 +103,14 @@ def generate_variant(index, db_path=None, ingestion_index=-1, questions_db=None)
 
     forced_type = detect_format(q.get("text", ""))
     algorithm = extract_algorithm(q.get("text", ""))
+    contract = build_question_contract(q.get("text", ""))
     expected_mcq_options = count_options(q.get("text", ""))
     if forced_type == "MCQ" and expected_mcq_options < 2:
         expected_mcq_options = 4
+    # C++ PDFs often use "1. 2. 3." line numbers before statements; count_options is unreliable.
+    if forced_type == "MCQ" and contract.language == "cpp":
+        expected_mcq_options = 0
     gen_label = resolved_openrouter_model()
-    contract = build_question_contract(q.get("text", ""))
     print(
         f"Format: {forced_type} | Algorithm: {algorithm} | Mode: {contract.mode} | "
         f"Lang: {contract.language} | Reskin: {contract.allow_thematic_reskin} | Gen Model: {gen_label}"
@@ -102,7 +125,11 @@ def generate_variant(index, db_path=None, ingestion_index=-1, questions_db=None)
         print(f"  Scenario: {label} ({scenario['style']})")
 
         gen_prompt = build_generation_prompt(
-            q["text"], forced_type, scenario, algorithm, contract
+            _clip_text_for_generation(q.get("text", "") or "", generation_source_max_chars()),
+            forced_type,
+            scenario,
+            algorithm,
+            contract,
         )
         variant = call_llm(gen_prompt, image_paths=image_paths, temperature=temperature)
         if not variant or "variant_text" not in variant:
@@ -148,7 +175,12 @@ def generate_variant(index, db_path=None, ingestion_index=-1, questions_db=None)
             contract,
         )
 
-        solution = call_llm(verify_prompt, image_paths=None, temperature=temperature)
+        solution = call_llm(
+            verify_prompt,
+            image_paths=None,
+            temperature=temperature,
+            timeout_sec=openrouter_timeout_verify(),
+        )
         if not solution or "final_answer" not in solution:
             print("  Solver returned null or missing final_answer.")
             continue

@@ -166,14 +166,21 @@ def infer_programming_language(text: str) -> str:
     t = text or ""
     if re.search(r"\b(import\s+java|public\s+static\s+void\s+main|java\.util|system\.out)\b", tl):
         return "java"
+    # C++ / intro-C course signals (keep broad: many PDFs lack #include in snippets)
     if (
-        "std::" in t
+        "c++" in tl
+        or "cplusplus" in tl
+        or "std::" in t
         or "#include" in t
         or "namespace std" in tl
         or "nullptr" in tl
-        or re.search(r"\bcout\s*<<", tl)
-        or re.search(r"\bcin\s*>>", tl)
+        or "static_cast" in tl
+        or "using namespace" in tl
+        or re.search(r"\bcout\b", tl)
+        or re.search(r"\bcin\b", tl)
+        or re.search(r"\bendl\b", tl)
         or re.search(r"\bvector\s*<\s*\w+\s*>", t)
+        or re.search(r"\b(int|double|float|long|unsigned|char|bool|void)\s+\w+\s*=\s*[^;\n]+;", t)
     ):
         return "cpp"
     if re.search(r"^\s*def\s+\w+", t, re.MULTILINE) or re.search(

@@ -35,6 +35,27 @@ def openrouter_vision_enabled() -> bool:
 
 DEBUG = False
 MAX_RETRIES = 3
+
+# HTTP read timeouts (seconds) for OpenRouter. Verify is usually short; keep it lower so a
+# hung or token-bloated call does not block the batch for minutes.
+def openrouter_timeout_generate() -> float:
+    return float(os.getenv("OPENROUTER_TIMEOUT", "90"))
+
+
+def openrouter_timeout_verify() -> float:
+    return float(os.getenv("OPENROUTER_TIMEOUT_VERIFY", "55"))
+
+
+def verify_variant_text_max_chars() -> int:
+    """Cap variant_text size embedded in verify prompts (avoids huge completions / slow calls)."""
+    return max(4000, int(os.getenv("VERIFY_VARIANT_TEXT_MAX_CHARS", "14000")))
+
+
+def generation_source_max_chars() -> int:
+    """Cap raw question text sent to the generation prompt only."""
+    return max(12000, int(os.getenv("GENERATION_SOURCE_MAX_CHARS", "26000")))
+
+
 BASE_TEMPERATURE = 0.4
 SIMILARITY_THRESHOLD = 0.6
 SIMILARITY_THRESHOLD_EXPLANATION = 0.72

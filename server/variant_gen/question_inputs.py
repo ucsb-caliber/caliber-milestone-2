@@ -99,4 +99,18 @@ def detect_format(text: str) -> str:
     has_mcq = re.search(r"(?:^|\n|\s)(?:[A-E]|[1-5])[\.\)]\s+\w+", text)
     if has_mcq:
         return "MCQ"
+    # Scanned exams: "o  A   option text" or letter on its own line without \w+ immediately after
+    letter_marks = len(re.findall(r"(?:^|\n|\s)[A-E][\.\)]\s*", text, flags=re.IGNORECASE))
+    # "o  A   option" (circle / scan noise; letter not always followed by .)
+    o_letter_opts = len(re.findall(r"(?:^|\n|\s)o\s+([A-E])\b", text, flags=re.IGNORECASE))
+    mcq_phrases = (
+        "which of the following",
+        "which of these",
+        "which one of the following",
+        "select all",
+        "choose the",
+        "all of the following are",
+    )
+    if (letter_marks >= 2 or o_letter_opts >= 2) and any(k in text_lower for k in mcq_phrases):
+        return "MCQ"
     return "FREE_RESPONSE"

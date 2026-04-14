@@ -3,8 +3,25 @@
 import json
 from typing import Any, Dict, Optional
 
+from .config import verify_variant_text_max_chars
 from .question_contract import QuestionContract, fence_lang, language_display
 from .variant_validation import count_options, original_asks_for_code_submission
+
+
+def _truncate_for_verify_block(s: str, max_chars: int) -> str:
+    s = (s or "").strip()
+    if len(s) <= max_chars:
+        return s
+    head = max(2000, max_chars // 2 - 60)
+    tail = max_chars - head - 140
+    if tail < 800:
+        tail = 800
+        head = max(2000, max_chars - tail - 140)
+    return (
+        s[:head]
+        + f"\n\n[... omitted {len(s) - head - tail} characters from middle of question ...]\n\n"
+        + s[-tail:]
+    )
 
 
 def prompt_extras(original_text: str, forced_type: str, style: str, contract: QuestionContract) -> str:
@@ -189,6 +206,8 @@ STRUCTURAL RULES:
 7. Do NOT mention the original question or call this a "variant".
 8. NEVER paste schema instructions into fields. Every string field must be real exam prose
    a student would read — not phrases like "1-2 sentence scenario" or "full problem statement".
+9. Keep variant_text and options reasonably compact (avoid repeating the same code block many times);
+   downstream verification must fit in a single JSON object.
 
 OUTPUT JSON (shape only — replace values with your own complete text):
 {{
@@ -210,12 +229,20 @@ def build_verify_prompt(
     contract: QuestionContract,
 ) -> str:
     ld = language_display(contract.language)
+    vlim = verify_variant_text_max_chars()
+    vt = _truncate_for_verify_block(variant_text, vlim)
+    trunc_note = (
+        "\nNOTE: Question text above may be truncated for size; solve from what is shown.\n"
+        if len(variant_text or "") > vlim
+        else ""
+    )
     if forced_type in ("MCQ", "TRUE_FALSE"):
         return f"""Solve the following problem. Think step by step. Use {ld} rules where the question involves code or APIs.
+Keep "reasoning" under ~1200 characters so the reply stays valid JSON (no huge unescaped strings).
 
 Question:
-\"\"\"{variant_text}\"\"\"
-
+\"\"\"{vt}\"\"\"
+{trunc_note}
 Options: {json.dumps(options) if options else "N/A"}
 
 {"Return ONLY the letter label (A, B, C, D, or E)." if forced_type == "MCQ" else "Return exactly 'True' or 'False'."}
@@ -241,10 +268,11 @@ OUTPUT JSON:
 
     return f"""You are verifying a practice problem ({ld} where relevant). First judge if the question is valid,
 then solve it if it is, and check whether the claimed answer is correct.
+Keep "reasoning" under ~2000 characters so the reply stays valid JSON.
 
 Question:
-\"\"\"{variant_text}\"\"\"
-
+\"\"\"{vt}\"\"\"
+{trunc_note}
 Claimed correct answer:
 \"\"\"{claimed_answer}\"\"\"
 
@@ -257,9 +285,7 @@ Claimed correct answer:
   decimals for a coding problem).
 - The claimed answer is a rubric or author note ("The correct answer should...", "The student should...",
   "must be a function that...") instead of the actual code or model prose the student would submit.
-{code_only_invalid}- The question stem already contains a complete or nearly complete implementation that matches the claimed
-  answer (solution given away to students—often from merged answer keys).
-
+{code_only_invalid}
 STEPS (if the question is valid):
 1. Solve the question yourself. Show your reasoning.
 2. Compare your solution to the claimed answer.

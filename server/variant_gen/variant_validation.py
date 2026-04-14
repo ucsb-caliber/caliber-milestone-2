@@ -1,4 +1,4 @@
-"""Deterministic checks on model JSON: placeholders, MCQ shape, answer/stem leakage, similarity."""
+"""Deterministic checks on model JSON: placeholders, MCQ shape, similarity."""
 
 import re
 from difflib import SequenceMatcher
@@ -71,6 +71,10 @@ def original_asks_for_code_submission(original_text: Optional[str]) -> bool:
             "recursive function",
             "implement a function",
             "define a function",
+            "complete the following program",
+            "complete the following code",
+            "write the following function",
+            "implement the following",
         )
     )
 
@@ -100,7 +104,12 @@ def normalize_answer(ans: Any) -> str:
     if s in ["FALSE", "F", "NO"]:
         return "FALSE"
     match = re.search(r"(?:^|\s|\.|^OPTION\s)([A-E1-5])(?:$|\s|\.|[\)])", s)
-    val = match.group(1) if match else s[:1]
+    if match:
+        val = match.group(1)
+    else:
+        # e.g. "The answer is (B)" or trailing letter after junk / numeric distractors
+        m2 = re.search(r"\b([A-E])\b", s)
+        val = m2.group(1) if m2 else s[:1]
 
     mapping = {"1": "A", "2": "B", "3": "C", "4": "D", "5": "E"}
     return mapping.get(val, val)
@@ -137,24 +146,6 @@ def count_options(text: str) -> int:
     return count if count >= 2 else 0
 
 
-def _answer_snippet_in_stem(stem_blob: str, answer: str, min_len: int = 28) -> bool:
-    if not answer or len(answer) < min_len:
-        return False
-    a = answer.strip().lower()
-    s = (stem_blob or "").lower()
-    win = min(72, max(min_len, len(a) // 2))
-    if len(a) < win:
-        return a in s
-    for i in range(0, len(a) - win + 1, max(1, win // 3)):
-        if a[i : i + win] in s:
-            return True
-    return False
-
-
-def _norm_code_line(line: str) -> str:
-    return re.sub(r"\s+", " ", (line or "").strip())
-
-
 def _answer_looks_like_code(ca: str, lang: str) -> bool:
     s = ca or ""
     sl = s.lower()
@@ -168,64 +159,6 @@ def _answer_looks_like_code(ca: str, lang: str) -> bool:
     if lang == "java":
         return "class " in sl or re.search(r"\b(public|private)\s+.*\(", s) is not None
     return bool(re.search(r"def\s+\w+|class\s+\w+", sl) or ("{" in s and ";" in s))
-
-
-def _extract_python_for_parse(s: Optional[str]) -> str:
-    if not s:
-        return ""
-    m = re.search(r"```(?:python)?\s*(.*?)```", s, re.DOTALL | re.IGNORECASE)
-    if m:
-        return m.group(1).strip()
-    return s.strip()
-
-
-def _free_response_code_leaked_into_stem(stem_blob: str, ca_str: str, lang: str) -> bool:
-    if lang != "python":
-        return False
-    if not _answer_looks_like_code(ca_str, lang):
-        return False
-    code = _extract_python_for_parse(ca_str)
-    if len(code) < 60 or "class " not in code:
-        return False
-
-    ans_lines = []
-    for line in code.splitlines():
-        n = _norm_code_line(line)
-        if len(n) < 12 or n.startswith("#"):
-            continue
-        ans_lines.append(n)
-    if len(ans_lines) < 3:
-        return False
-    ans_set = set(ans_lines)
-
-    stem_lines = {_norm_code_line(l) for l in (stem_blob or "").splitlines()}
-    stem_lines.discard("")
-    overlap = ans_set & stem_lines
-    if len(overlap) >= 4:
-        return True
-    if len(overlap) >= 2 and sum(len(x) for x in overlap) >= 100:
-        return True
-    if len(overlap) >= 3 and len(overlap) / len(ans_set) >= 0.45:
-        return True
-    return False
-
-
-def _free_response_fenced_code_matches_answer(stem_blob: str, ca_str: str, lang: str) -> bool:
-    if lang != "python" or not _answer_looks_like_code(ca_str, lang):
-        return False
-    ca_code = _extract_python_for_parse(ca_str)
-    if len(ca_code) < 40:
-        return False
-    ca_compact = re.sub(r"\s+", " ", ca_code.strip())
-    blocks = re.findall(r"```(?:python)?\s*(.*?)```", stem_blob or "", re.DOTALL | re.IGNORECASE)
-    for blk in blocks:
-        b = blk.strip()
-        if len(b) < 35:
-            continue
-        b_compact = re.sub(r"\s+", " ", b)
-        if SequenceMatcher(None, ca_compact, b_compact).ratio() > 0.82:
-            return True
-    return False
 
 
 def _line_looks_like_code_definition(line: str, lang: str) -> bool:
@@ -284,13 +217,11 @@ def free_response_correct_answer_invalid(
         if frag in ca_lower:
             return "correct_answer is meta/rubric, not a concrete solution"
 
-    require_code = _variant_asks_for_python_code(variant)
-    if (
-        require_code
-        and contract.mode == "conceptual"
-        and not original_asks_for_code_submission(original_text or "")
-    ):
-        require_code = False
+    # Only treat as "must submit code" if the *source* asked for it. Reskins often
+    # add "write a function…" even for trace-the-output / fill-in questions.
+    require_code = _variant_asks_for_python_code(variant) and original_asks_for_code_submission(
+        original_text or ""
+    )
 
     if require_code:
         if not _answer_looks_like_code(ca, lang):
@@ -340,10 +271,6 @@ def is_invalid_variant(
     if ca is None:
         ca = ""
 
-    stem_blob = " ".join(
-        str(variant.get(k) or "") for k in ("storyline", "task", "variant_text", "constraints")
-    )
-
     if forced_type == "FREE_RESPONSE":
         fr_err = free_response_correct_answer_invalid(
             ca, variant, lang, contract, original_text
@@ -353,19 +280,6 @@ def is_invalid_variant(
         if free_response_cs_vocabulary_lost(original_text, variant, contract):
             return "conceptual FR drifted off-topic (keep CS terms from the original, not a novelty theme)"
         ca_str = ca if isinstance(ca, str) else str(ca)
-        if _free_response_code_leaked_into_stem(stem_blob, ca_str, lang):
-            return (
-                "variant_text repeats correct_answer implementation (answer key in ingest?) — "
-                "keep specs in stem, code only in correct_answer"
-            )
-        if _free_response_fenced_code_matches_answer(stem_blob, ca_str, lang):
-            return (
-                "fenced code in variant_text matches correct_answer — remove full solution from stem "
-                "(spec or empty starter only)"
-            )
-        skip_overlap = _answer_looks_like_code(ca_str, lang)
-        if not skip_overlap and _answer_snippet_in_stem(stem_blob, ca_str):
-            return "answer text appears to be copied into the stem"
         if _variant_code_blob_heuristic(vt_raw, lang):
             return (
                 f"code in variant_text is crammed (use fenced ```{fence_lang(lang)} ``` blocks and line breaks)"
@@ -385,7 +299,13 @@ def is_invalid_variant(
         if expected_mcq_options >= 2 and n != expected_mcq_options:
             return f"expected {expected_mcq_options} MCQ options, got {n}"
         vals = [str(v).strip() for v in opts.values()]
-        if vals and all(re.match(r"^0\.\d+$", v) for v in vals if v):
+        # Avoid false positives on legitimate numeric MCQs (decimals, measurements).
+        if (
+            vals
+            and len(vals) >= 4
+            and all(re.match(r"^0\.\d+$", v) for v in vals if v)
+            and not any(re.search(r"[a-zA-Z]", v) for v in vals if v)
+        ):
             return "MCQ options look like garbage probabilities"
 
         if lang == "python":

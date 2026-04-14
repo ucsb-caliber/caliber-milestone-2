@@ -5,11 +5,18 @@ import json
 import os
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import requests
 
-from .config import BASE_TEMPERATURE, DEBUG, OPENROUTER_URL, openrouter_vision_enabled, resolved_openrouter_model
+from .config import (
+    BASE_TEMPERATURE,
+    DEBUG,
+    OPENROUTER_URL,
+    openrouter_timeout_generate,
+    openrouter_vision_enabled,
+    resolved_openrouter_model,
+)
 
 _IMAGE_MIME = {
     ".png": "image/png",
@@ -20,7 +27,7 @@ _IMAGE_MIME = {
 }
 
 
-def encode_image(path: Path | str, data_url: bool = False) -> Optional[str]:
+def encode_image(path: Union[Path, str], data_url: bool = False) -> Optional[str]:
     p = Path(path)
     if not p.exists():
         return None
@@ -53,6 +60,7 @@ def _openrouter_chat(
     image_paths: List[Path],
     temp: float,
     model: str,
+    timeout_sec: float,
 ) -> Optional[Dict[str, Any]]:
     key = os.getenv("OPENROUTER_API_KEY", "").strip()
     if not key:
@@ -87,7 +95,13 @@ def _openrouter_chat(
         "response_format": {"type": "json_object"},
     }
     try:
-        response = requests.post(OPENROUTER_URL, json=payload, headers=headers, timeout=120)
+        connect_s = min(20.0, max(5.0, timeout_sec * 0.25))
+        response = requests.post(
+            OPENROUTER_URL,
+            json=payload,
+            headers=headers,
+            timeout=(connect_s, timeout_sec),
+        )
         if not response.ok:
             try:
                 err = response.json()
@@ -102,7 +116,7 @@ def _openrouter_chat(
             print(f"[DEBUG] Raw response: {content}")
         return parse_llm_json(content)
     except requests.Timeout:
-        print("  Request timed out (120s).")
+        print(f"  Request timed out ({timeout_sec:.0f}s).")
         return None
     except Exception as e:
         print(f"  Unexpected error: {type(e).__name__}: {e}")
@@ -112,17 +126,19 @@ def _openrouter_chat(
 def call_llm(
     prompt: str,
     *,
-    image_paths: Optional[List[Path | str]] = None,
+    image_paths: Optional[List[Union[Path, str]]] = None,
     temperature: Optional[float] = None,
     model: Optional[str] = None,
+    timeout_sec: Optional[float] = None,
 ) -> Optional[Dict[str, Any]]:
     """Generate or verify: JSON object in, JSON object out. Uses OpenRouter only."""
     paths = [Path(x) for x in (image_paths or []) if x]
     temp = temperature if temperature is not None else BASE_TEMPERATURE
     mid = model or resolved_openrouter_model()
+    to = float(timeout_sec) if timeout_sec is not None else openrouter_timeout_generate()
     if DEBUG:
-        print(f"\n[DEBUG] Calling OpenRouter model: {mid}")
-    return _openrouter_chat(prompt, paths, temp, mid)
+        print(f"\n[DEBUG] Calling OpenRouter model: {mid} (timeout {to:.0f}s)")
+    return _openrouter_chat(prompt, paths, temp, mid, to)
 
 
 def text_model_supports_images() -> bool:
