@@ -21,6 +21,7 @@ import torch
 import torchvision.transforms.functional as TF
 import requests
 from pytesseract import Output
+import cv2
 
 import numpy as np
 
@@ -53,7 +54,7 @@ QUESTIONS_DB_FILENAME = "questions.json"  # stored inside OUTPUT_DIR
 DEBUG = True
 DEBUG_DRAW_LAYOUT = False   # <-- IMPORTANT: avoids Pillow10 layoutparser crash
 
-BATCH_SIZE = 4      
+BATCH_SIZE = 6      
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 # ===================== QUESTION DETECTION =====================
@@ -61,8 +62,7 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 QUESTION_START_PATTERNS = [
     r"^\s*Problem\s+\d+\b",
     r"^\s*Question\s+\d+\b",
-    r"^\s*Q\s*\d+\b",
-    r"^\s*\d+\.\s+.+[. ?:].*"
+    r"^\s*Q\s*\d+\b"
 ]
 
 QUESTION_START_RE = re.compile("|".join(QUESTION_START_PATTERNS), re.IGNORECASE)
@@ -117,6 +117,11 @@ class Question:
 
 
 # ===================== HELPERS =====================
+
+def pil_to_bgr_np(pil_img) -> np.ndarray:
+    rgb = np.array(pil_img.convert("RGB"))
+    return cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
+
 
 def utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
@@ -197,6 +202,24 @@ def safe_draw_layout_debug(page_img: Image.Image, layout: lp.Layout, save_path: 
 
 
 # ===================== OCR + PARSING =====================
+def ocr_crop(bgr: np.ndarray, bbox, padding: int = 30) -> str:
+    x1, y1, x2, y2 = bbox
+    h, w = bgr.shape[:2]
+    x1 = 0 # Fine for now 
+    x2 = max(0, min(x2, w))
+    y1 = max(0, min(y1, h - 1))
+    y2 = max(0, min(y2, h))
+
+    crop = bgr[y1:y2, x1:x2]
+    if crop.size == 0:
+        return ""
+
+    gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+    gray = cv2.resize(gray, None, fx=2.0, fy=2.0, interpolation=cv2.INTER_CUBIC)
+    gray = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+
+    text = pytesseract.image_to_string(gray, config="--oem 3 --psm 6")
+    return text.replace("\x0c", "").strip()
 
 def get_text_within_box(ocr_data: Dict, bbox: Tuple[int, int, int, int], conf_thresh: int = 50) -> str:
     x1, y1, x2, y2 = bbox
@@ -222,17 +245,13 @@ def get_text_within_box(ocr_data: Dict, bbox: Tuple[int, int, int, int], conf_th
 
 
 def parse_page(layout: lp.Layout, page_img: Image.Image, page_num: int) -> List[Block]:
-    ocr_data = pytesseract.image_to_data(
-        page_img,
-        output_type=Output.DICT,
-        config="--oem 3 --psm 6 -l eng"
-    )
-
+    bgr = pil_to_bgr_np(page_img)
     page_blocks: List[Block] = []
+
     for b in layout:
         x1, y1, x2, y2 = map(int, b.block.coordinates)
         btype = str(b.type)
-        text = get_text_within_box(ocr_data, (x1, y1, x2, y2))
+        text = ocr_crop(bgr, (x1, y1, x2, y2))
         if not text and btype.lower() != "figure":
             continue
         page_blocks.append(Block(page=page_num, bbox=(x1, y1, x2, y2), text=text, btype=btype))
@@ -242,7 +261,7 @@ def parse_page(layout: lp.Layout, page_img: Image.Image, page_num: int) -> List[
 
 def detect_batch(model : Any, images : List[Image.Image]) -> List[lp.Layout]:
     predictor = model.model # Underlying Detectron2 Model
-
+    images = [image.convert("RGB") for image in images]
     inputs = []
     for img in images:
         img_np = np.array(img)[:, :, ::-1] # BGR conversion
@@ -262,7 +281,7 @@ def detect_batch(model : Any, images : List[Image.Image]) -> List[lp.Layout]:
         outputs = predictor.model(inputs) # Underlying Torch model
 
     layouts = []
-    for output in outputs:
+    for i, output in enumerate(outputs):
         instances = output['instances'].to("cpu")
 
         boxes = instances.pred_boxes.tensor.numpy()
@@ -273,14 +292,14 @@ def detect_batch(model : Any, images : List[Image.Image]) -> List[lp.Layout]:
 
         for box, score, cls in zip(boxes, scores, classes):
             x1, y1, x2, y2 = box
-            
-            textblock = TextBlock(Rectangle(x1, y1, x2, y2),  type=model.label_map.get(cls), score=score)
-            layout.append(textblock)
+            if model.label_map.get(cls) is not None:
+                textblock = TextBlock(Rectangle(x1, y1, x2, y2),  type=model.label_map.get(cls), score=score)
+                layout.append(textblock)
 
-        layout = keep_largest_blocks(layout, threshold=0.9)
+        layout = keep_largest_blocks(layout)
         layout = sort_layout_reading_order(layout, Y_TOL)
-
-        layouts.append(layout)
+        
+        layouts.append((layout, images[i], i))
 
     return layouts
 
@@ -344,39 +363,34 @@ def parse_pdf_to_questions(pages: List[Image.Image], model: Any) -> List[Questio
     pages = pages[start: end]
 
     all_questions: List[Question] = []
-    current_question: Optional[Question] = None
 
-    outputs = []
+    layouts = List[Tuple[lp.Layout, Image.Image, int]]
 
     for i in range(0, len(pages), BATCH_SIZE):
-        outputs.extend(model.detect_batch(pages[i: i+BATCH_SIZE]))
-
-    layouts = []
-    for i, layout in enumerate(outputs):
-        page_num = start + i + 1
-        page_img = pages[i]
-
-        if DEBUG and DEBUG_DRAW_LAYOUT:
-            Path("pages").mkdir(exist_ok=True)
-            save_path = os.path.join("pages", f"debug_page_{page_num}.png")
-            safe_draw_layout_debug(page_img, layout, save_path)
-
-        layouts.append(parse_page(layout, page_img, page_num))
+        layouts.extend(model.detect_batch(pages[i: i+BATCH_SIZE]))
 
 
-    for page in layouts:
-        for block in page:
-            if block.btype in ['Text', 'Title'] and is_question_start(block):
-                if current_question is not None:
-                    all_questions.append(current_question)
-                current_question = Question(start_page=block.page)
-                current_question.add_block(block)
-            else:
-                if current_question is not None:
-                    current_question.add_block(block)
+    q_start: List[Question] = []
+    n_start: List[Question] = []
+    for layout, image, page in layouts:
+        bgr = pil_to_bgr_np(image)
+        for b in layout:
+            x1, y1, x2, y2 = map(int, b.block.coordinates)
+            text = ocr_crop(bgr, (x1, y1, x2, y2))
+            block = Block(page, (x1, y1, x2, y2), text, b.btype)
 
-    if current_question is not None:
-        all_questions.append(current_question)
+            if is_question_start(text):
+                q_start.append(Question(start_page=block.page, blocks=[block]))
+            elif q_start:
+                q_start[-1].add_block(block)
+
+            if text.startswith(str(len(n_start)+1)):
+                n_start.append(Question(start_page=block.page, blocks=[block]))   
+            elif n_start:
+                n_start[-1].add_block(block)        
+
+    all_questions = max(q_start, n_start, key=len)
+                        
 
     return all_questions
 
@@ -507,7 +521,7 @@ def load_layout_model():
     """
     print("Loading model...")
 
-    label_map = {0: "Text", 1: "Title", 2: "List", 3: "Table", 4: "Figure"}
+    label_map = {0: "Text", 1: "Title"} # Faster and Better question start detection
 
     cache_root = Path.home() / ".cache" / "caliber_layout_models"
     cache_root.mkdir(parents=True, exist_ok=True)
