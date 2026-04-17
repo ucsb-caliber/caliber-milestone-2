@@ -54,7 +54,7 @@ QUESTIONS_DB_FILENAME = "questions.json"  # stored inside OUTPUT_DIR
 DEBUG = True
 DEBUG_DRAW_LAYOUT = False   # <-- IMPORTANT: avoids Pillow10 layoutparser crash
 
-BATCH_SIZE = 6      
+BATCH_SIZE = 4      
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 # ===================== QUESTION DETECTION =====================
@@ -183,6 +183,9 @@ def load_questions_db(db_path: Path) -> Dict[str, Any]:
 def is_question_start(block: Block) -> bool:
     return bool(QUESTION_START_RE.match(block.text.strip()))
 
+def is_numbered_start(block: Block) -> bool:
+    return bool(re.match(r'\d+\. ', block.text.strip()))
+
 
 # -------------------- Debug drawing wrapper --------------------
 
@@ -299,8 +302,7 @@ def detect_batch(model : Any, images : List[Image.Image]) -> List[lp.Layout]:
         layout = keep_largest_blocks(layout)
         layout = sort_layout_reading_order(layout, Y_TOL)
         
-        layouts.append((layout, images[i], i))
-
+        layouts.append(layout)
     return layouts
 
 # ===================== LAYOUT FORMATTING =====================
@@ -364,34 +366,34 @@ def parse_pdf_to_questions(pages: List[Image.Image], model: Any) -> List[Questio
 
     all_questions: List[Question] = []
 
-    layouts = List[Tuple[lp.Layout, Image.Image, int]]
+    layouts: List[lp.layout] = []
 
     for i in range(0, len(pages), BATCH_SIZE):
         layouts.extend(model.detect_batch(pages[i: i+BATCH_SIZE]))
 
-
     q_start: List[Question] = []
     n_start: List[Question] = []
-    for layout, image, page in layouts:
-        bgr = pil_to_bgr_np(image)
+    for i, layout in enumerate(layouts):
+        bgr = pil_to_bgr_np(pages[i])
         for b in layout:
             x1, y1, x2, y2 = map(int, b.block.coordinates)
             text = ocr_crop(bgr, (x1, y1, x2, y2))
-            block = Block(page, (x1, y1, x2, y2), text, b.btype)
+            block = Block(i, (x1, y1, x2, y2), text, b.type)
 
-            if is_question_start(text):
-                q_start.append(Question(start_page=block.page, blocks=[block]))
+            if is_question_start(block):
+                q_start.append(Question(start_page=block.page))
+                q_start[-1].add_block(block)
             elif q_start:
                 q_start[-1].add_block(block)
 
-            if text.startswith(str(len(n_start)+1)):
-                n_start.append(Question(start_page=block.page, blocks=[block]))   
+            if is_numbered_start(block):
+                n_start.append(Question(start_page=block.page))   
+                n_start[-1].add_block(block) 
             elif n_start:
                 n_start[-1].add_block(block)        
 
     all_questions = max(q_start, n_start, key=len)
                         
-
     return all_questions
 
 
