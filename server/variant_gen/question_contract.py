@@ -1,12 +1,12 @@
 """
 Single place to decide *how* we treat an unseen question before generation.
 
-Today this is rule-based (keywords + light language detection). The expected
-evolution for scale:
+Today routing is mostly rule-based (keywords + light language detection), with an
+optional LLM assist:
 
-  1. Keep the QuestionContract field names stable.
-  2. Optionally set QUESTION_ROUTER=llm and replace build_question_contract() body
-     with one structured LLM call that returns the same JSON shape.
+  1. Keep the QuestionContract field names stable (including ``question_format``).
+  2. ``QUESTION_ROUTER=llm`` — see ``question_router.route_stem``: one small JSON call
+     for ``question_format`` and ``language`` only; mode and reskin stay rule-derived.
   3. Validators and prompts consume only QuestionContract — not scattered stems.
 
 Adding a new “kind” of question should mean: extend the contract (if needed),
@@ -23,6 +23,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from dotenv import load_dotenv
+
+from .question_inputs import detect_format
 
 _SERVER_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(_SERVER_DIR / ".env")
@@ -333,15 +335,17 @@ class QuestionContract:
     language: str
     mode: str
     allow_thematic_reskin: bool
+    question_format: str
     routing_source: str = "rules"
 
 
 def build_question_contract(text: str) -> QuestionContract:
     """
-    Central router. Swap this implementation (e.g. LLM JSON) without touching
-    prompts line-by-line, as long as you populate the same fields.
+    Rule-based stem router (language, mode, reskin, MCQ vs FR vs TF).
+
+    For optional LLM assist on format/language only, use ``route_stem`` in
+    ``question_router.py`` (``QUESTION_ROUTER=llm``).
     """
-    _ = os.getenv("QUESTION_ROUTER", "rules").strip().lower()  # reserved for llm router
     lang = infer_programming_language(text)
     mode = question_mode(text)
     allow = (
@@ -349,7 +353,14 @@ def build_question_contract(text: str) -> QuestionContract:
         and not looks_like_structural_trace_task(text)
         and not looks_like_named_function_write_task(text)
     )
-    return QuestionContract(language=lang, mode=mode, allow_thematic_reskin=allow, routing_source="rules")
+    qf = detect_format(text)
+    return QuestionContract(
+        language=lang,
+        mode=mode,
+        allow_thematic_reskin=allow,
+        question_format=qf,
+        routing_source="rules",
+    )
 
 
 def scenario_from_contract(contract: QuestionContract) -> dict:

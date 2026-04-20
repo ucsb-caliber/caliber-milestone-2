@@ -24,6 +24,24 @@ def resolved_openrouter_model() -> str:
     return os.getenv("OPENROUTER_MODEL", "").strip() or DEFAULT_OPENROUTER_MODEL
 
 
+def resolved_question_router_model() -> str:
+    """OpenRouter slug for ``QUESTION_ROUTER=llm`` (defaults to main generate model)."""
+    return os.getenv("QUESTION_ROUTER_MODEL", "").strip() or resolved_openrouter_model()
+
+
+def question_router_name() -> str:
+    return os.getenv("QUESTION_ROUTER", "rules").strip().lower()
+
+
+def question_router_timeout_sec() -> float:
+    return float(os.getenv("QUESTION_ROUTER_TIMEOUT", "25"))
+
+
+def telemetry_enabled() -> bool:
+    """Emit one-line JSON routing / outcome events when ``VARIANT_GEN_TELEMETRY=1``."""
+    return os.getenv("VARIANT_GEN_TELEMETRY", "").strip().lower() in ("1", "true", "yes", "on")
+
+
 def openrouter_vision_enabled() -> bool:
     """Multimodal requests allowed (crop + text in one call)."""
     return os.getenv("OPENROUTER_VISION", os.getenv("OPENROUTER_SEND_IMAGES", "1")).lower() not in (

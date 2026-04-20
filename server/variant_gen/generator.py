@@ -14,23 +14,23 @@ from pathlib import Path
 
 from .config import (
     BASE_TEMPERATURE,
-    DB_PATH,
     DEBUG,
     MAX_RETRIES,
     generation_source_max_chars,
     openrouter_timeout_verify,
     resolved_openrouter_model,
+    telemetry_enabled,
 )
 from .exam_tests_questions import load_questions_database
 from .llm_client import call_llm, text_model_supports_images
 from .prompts import build_generation_prompt, build_verify_prompt
-from .question_contract import build_question_contract, scenario_from_contract
+from .question_contract import scenario_from_contract
 from .question_inputs import (
-    detect_format,
     extract_algorithm,
     should_skip_question,
     should_use_vision,
 )
+from .question_router import route_stem, telemetry_outcome_line, telemetry_routing_line
 from .variant_validation import (
     autofix_list_method_mcq,
     free_response_correct_answer_invalid,
@@ -101,9 +101,9 @@ def generate_variant(index, db_path=None, ingestion_index=-1, questions_db=None)
             "using question text only."
         )
 
-    forced_type = detect_format(q.get("text", ""))
     algorithm = extract_algorithm(q.get("text", ""))
-    contract = build_question_contract(q.get("text", ""))
+    contract = route_stem(q.get("text", "") or "")
+    forced_type = contract.question_format
     expected_mcq_options = count_options(q.get("text", ""))
     if forced_type == "MCQ" and expected_mcq_options < 2:
         expected_mcq_options = 4
@@ -113,8 +113,12 @@ def generate_variant(index, db_path=None, ingestion_index=-1, questions_db=None)
     gen_label = resolved_openrouter_model()
     print(
         f"Format: {forced_type} | Algorithm: {algorithm} | Mode: {contract.mode} | "
-        f"Lang: {contract.language} | Reskin: {contract.allow_thematic_reskin} | Gen Model: {gen_label}"
+        f"Lang: {contract.language} | Reskin: {contract.allow_thematic_reskin} | "
+        f"Route: {contract.routing_source} | Gen Model: {gen_label}"
     )
+    qid = q.get("question_id") or ""
+    if telemetry_enabled():
+        print(telemetry_routing_line(qid, contract), flush=True)
 
     for attempt in range(1, MAX_RETRIES + 1):
         temperature = BASE_TEMPERATURE + (attempt - 1) * 0.15
@@ -204,6 +208,8 @@ def generate_variant(index, db_path=None, ingestion_index=-1, questions_db=None)
 
         if verified:
             print(f"  Verified on attempt {attempt}")
+            if telemetry_enabled():
+                print(telemetry_outcome_line(qid, "verified", f"attempt={attempt}"), flush=True)
             return {
                 "original_id": q.get("question_id"),
                 "source_ingestion_id": ing.get("ingestion_id"),
@@ -228,6 +234,8 @@ def generate_variant(index, db_path=None, ingestion_index=-1, questions_db=None)
             }
 
     print(f"Failed verification after {MAX_RETRIES} attempts")
+    if telemetry_enabled():
+        print(telemetry_outcome_line(qid, "failed_all_retries", ""), flush=True)
     return None
 
 
