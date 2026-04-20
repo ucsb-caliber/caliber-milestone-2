@@ -128,6 +128,8 @@ def detect_format(text: str) -> str:
     letter_marks = len(re.findall(r"(?:^|\n|\s)[A-E][\.\)]\s*", text, flags=re.IGNORECASE))
     # "o  A   option" (circle / scan noise; letter not always followed by .)
     o_letter_opts = len(re.findall(r"(?:^|\n|\s)o\s+([A-E])\b", text, flags=re.IGNORECASE))
+    # AP / textbook style "(a)  I only" through "(e)  ..." — not matched by bare "A." above.
+    paren_letter_opts = len(re.findall(r"(?:^|\n|\s)\(\s*([A-E])\s*\)", text, flags=re.IGNORECASE))
     mcq_phrases = (
         "which of the following",
         "which of these",
@@ -136,6 +138,8 @@ def detect_format(text: str) -> str:
         "choose the",
         "all of the following are",
     )
-    if (letter_marks >= 2 or o_letter_opts >= 2) and any(k in text_lower for k in mcq_phrases):
+    if (
+        letter_marks >= 2 or o_letter_opts >= 2 or paren_letter_opts >= 2
+    ) and any(k in text_lower for k in mcq_phrases):
         return "MCQ"
     return "FREE_RESPONSE"

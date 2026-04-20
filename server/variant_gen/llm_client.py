@@ -4,10 +4,13 @@ import base64
 import json
 import os
 import re
+import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import requests
+from requests.exceptions import ConnectionError as RequestsConnectionError
+from requests.exceptions import SSLError
 
 from .config import (
     BASE_TEMPERATURE,
@@ -94,33 +97,46 @@ def _openrouter_chat(
         "temperature": temp,
         "response_format": {"type": "json_object"},
     }
-    try:
-        connect_s = min(20.0, max(5.0, timeout_sec * 0.25))
-        response = requests.post(
-            OPENROUTER_URL,
-            json=payload,
-            headers=headers,
-            timeout=(connect_s, timeout_sec),
-        )
-        if not response.ok:
-            try:
-                err = response.json()
-                detail = err.get("error", err)
-            except Exception:
-                detail = response.text[:500]
-            print(f"  OpenRouter HTTP {response.status_code}: {detail}")
+    connect_s = min(20.0, max(5.0, timeout_sec * 0.25))
+    max_attempts = max(1, int(os.getenv("OPENROUTER_HTTP_RETRIES", "3")))
+    for attempt in range(max_attempts):
+        try:
+            response = requests.post(
+                OPENROUTER_URL,
+                json=payload,
+                headers=headers,
+                timeout=(connect_s, timeout_sec),
+            )
+            if not response.ok:
+                try:
+                    err = response.json()
+                    detail = err.get("error", err)
+                except Exception:
+                    detail = response.text[:500]
+                print(f"  OpenRouter HTTP {response.status_code}: {detail}")
+                return None
+            data = response.json()
+            content = (data.get("choices") or [{}])[0].get("message", {}).get("content")
+            if DEBUG:
+                print(f"[DEBUG] Raw response: {content}")
+            return parse_llm_json(content)
+        except requests.Timeout:
+            print(f"  Request timed out ({timeout_sec:.0f}s).")
             return None
-        data = response.json()
-        content = (data.get("choices") or [{}])[0].get("message", {}).get("content")
-        if DEBUG:
-            print(f"[DEBUG] Raw response: {content}")
-        return parse_llm_json(content)
-    except requests.Timeout:
-        print(f"  Request timed out ({timeout_sec:.0f}s).")
-        return None
-    except Exception as e:
-        print(f"  Unexpected error: {type(e).__name__}: {e}")
-        return None
+        except (SSLError, RequestsConnectionError) as e:
+            if attempt + 1 >= max_attempts:
+                print(f"  Unexpected error: {type(e).__name__}: {e}")
+                return None
+            delay = min(8.0, 0.6 * (2**attempt))
+            print(
+                f"  Transient network/TLS error ({type(e).__name__}), "
+                f"retry {attempt + 2}/{max_attempts} in {delay:.1f}s..."
+            )
+            time.sleep(delay)
+        except Exception as e:
+            print(f"  Unexpected error: {type(e).__name__}: {e}")
+            return None
+    return None
 
 
 def call_llm(

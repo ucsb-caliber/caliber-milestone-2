@@ -4,8 +4,42 @@ import json
 from typing import Any, Dict, Optional
 
 from .config import verify_variant_text_max_chars
-from .question_contract import QuestionContract, fence_lang, language_display
+from .question_contract import (
+    QuestionContract,
+    fence_lang,
+    language_display,
+    looks_like_named_function_write_task,
+)
 from .variant_validation import count_options, original_asks_for_code_submission
+
+
+def _verify_output_only_hint(variant_text: str) -> str:
+    """Extra verify instructions when the stem is clearly 'what is the output' style."""
+    t = (variant_text or "").lower()
+    if not any(
+        p in t
+        for p in (
+            "what is the output",
+            "what is the exact output",
+            "exact output of",
+            "output when the following",
+            "output when the code",
+            "output of the following",
+            "output of the program",
+            "when the following code",
+            "when the following program",
+            "when executed",
+            "when run",
+            "indicate the output",
+        )
+    ):
+        return ""
+    return """OUTPUT-ONLY: If the question asks only for printed or literal program output (not writing new code),
+compare claimed_answer to your computed result. Set claimed_answer_is_correct true if they match in substance
+after trimming leading and trailing whitespace. Minor formatting (extra spaces or newlines) is fine.
+Do not mark false because claimed_answer is brief. If values, line order, or shown literals disagree, mark false.
+
+"""
 
 
 def _truncate_for_verify_block(s: str, max_chars: int) -> str:
@@ -70,6 +104,18 @@ def prompt_extras(original_text: str, forced_type: str, style: str, contract: Qu
                     "(e.g. do not add 'write a function' or require implementation) unless the source explicitly "
                     "asked for code."
                 )
+        elif contract.mode == "algorithmic" and not contract.allow_thematic_reskin:
+            chunks.append(
+                "MULTI-STEP / STRUCTURE TASK: Stay in normal CS and data-structure vocabulary. "
+                "Do not wrap the problem in an unrelated real-world metaphor. "
+                "Preserve every requirement to show intermediate states, diagrams, or step-by-step structure "
+                "as clearly as in the original (same level of detail)."
+            )
+        if looks_like_named_function_write_task(original_text or ""):
+            chunks.append(
+                f"NAMED FUNCTION: Keep the required function name and parameter types as in the prompt. "
+                f"correct_answer must be complete {language_display(lang)} that satisfies the spec—no language mix-ups."
+            )
         code_in_stem = any(
             k in t
             for k in (
@@ -237,6 +283,14 @@ def build_verify_prompt(
         else ""
     )
     if forced_type in ("MCQ", "TRUE_FALSE"):
+        # Avoid hard-coding A–E: some sources legitimately use more labels.
+        allowed = None
+        if forced_type == "MCQ" and options and isinstance(options, dict):
+            labels = [str(k).strip() for k in options.keys() if str(k).strip()]
+            # Keep single-token labels (A, B, 1, 2, etc.) and stable ordering.
+            labels = [l for l in labels if len(l) <= 2]
+            if labels:
+                allowed = ", ".join(labels)
         return f"""Solve the following problem. Think step by step. Use {ld} rules where the question involves code or APIs.
 Keep "reasoning" under ~1200 characters so the reply stays valid JSON (no huge unescaped strings).
 
@@ -245,7 +299,7 @@ Question:
 {trunc_note}
 Options: {json.dumps(options) if options else "N/A"}
 
-{"Return ONLY the letter label (A, B, C, D, or E)." if forced_type == "MCQ" else "Return exactly 'True' or 'False'."}
+{"Return ONLY one option label from: " + allowed + "." if (forced_type == "MCQ" and allowed) else ("Return ONLY the letter/number option label." if forced_type == "MCQ" else "Return exactly 'True' or 'False'.")}
 
 OUTPUT JSON:
 {{
@@ -265,6 +319,7 @@ OUTPUT JSON:
         if conceptual
         else ""
     )
+    output_only = _verify_output_only_hint(vt)
 
     return f"""You are verifying a practice problem ({ld} where relevant). First judge if the question is valid,
 then solve it if it is, and check whether the claimed answer is correct.
@@ -276,7 +331,7 @@ Question:
 Claimed correct answer:
 \"\"\"{claimed_answer}\"\"\"
 
-{conceptual_note}INVALID QUESTION — set claimed_answer_is_correct to false if ANY apply:
+{conceptual_note}{output_only}INVALID QUESTION — set claimed_answer_is_correct to false if ANY apply:
 - The question contains template/placeholder phrases (e.g. instructions meant for the author,
   not the student), garbled code, or is incoherent.
 - The question does not ask for a clear programming task when it should (e.g. nonsense numbers

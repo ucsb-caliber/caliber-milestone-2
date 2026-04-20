@@ -76,7 +76,7 @@ def generate_variant(index, db_path=None, ingestion_index=-1, questions_db=None)
     except IndexError:
         print(
             f"Ingestion index {ingestion_index} out of range "
-            f"(0–{len(ingestions) - 1}, or negative for from end)"
+            f"(0-{len(ingestions) - 1}, or negative for from end)"
         )
         return None
 

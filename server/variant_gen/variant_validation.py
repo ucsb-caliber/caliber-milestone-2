@@ -103,12 +103,13 @@ def normalize_answer(ans: Any) -> str:
         return "TRUE"
     if s in ["FALSE", "F", "NO"]:
         return "FALSE"
-    match = re.search(r"(?:^|\s|\.|^OPTION\s)([A-E1-5])(?:$|\s|\.|[\)])", s)
+    # Accept any single-letter option label, not just A–E.
+    match = re.search(r"(?:^|\s|\.|^OPTION\s)([A-Z1-5])(?:$|\s|\.|[\)])", s)
     if match:
         val = match.group(1)
     else:
         # e.g. "The answer is (B)" or trailing letter after junk / numeric distractors
-        m2 = re.search(r"\b([A-E])\b", s)
+        m2 = re.search(r"\b([A-Z])\b", s)
         val = m2.group(1) if m2 else s[:1]
 
     mapping = {"1": "A", "2": "B", "3": "C", "4": "D", "5": "E"}
@@ -120,11 +121,13 @@ def mcq_correct_option_label(correct_answer: Any, options: Any) -> Tuple[Optiona
         return None, None
     ca = str(correct_answer).strip()
     candidates = {ca, normalize_answer(ca)}
-    m = re.match(r"^([A-E])", ca, re.I)
+    m = re.match(r"^([A-Z])", ca, re.I)
     if m:
         L = m.group(1).upper()
         candidates.add(L)
-        candidates.add(str(ord(L) - ord("A") + 1))
+        # Only add numeric mapping for the canonical A–E range.
+        if "A" <= L <= "E":
+            candidates.add(str(ord(L) - ord("A") + 1))
     m = re.match(r"^([1-5])", ca)
     if m:
         num = m.group(1)
@@ -140,10 +143,18 @@ def mcq_correct_option_label(correct_answer: Any, options: Any) -> Tuple[Optiona
 
 
 def count_options(text: str) -> int:
-    letter_opts = re.findall(r"(?:^|\n|\s)[A-E][\.\)]\s", text)
-    num_opts = re.findall(r"(?:^|\n|\s)[1-5][\.\)]\s", text)
+    # Only treat explicit "A)" / "A." / "1)" / "1." patterns as options.
+    # Some stems (trees, traversals, stacks) contain many incidental letters/numbers; if we
+    # detect an implausibly large option count, disable enforcement (return 0).
+    letter_opts = re.findall(r"(?:^|\n)\s*[A-E][\.\)]\s+\S", text)
+    num_opts = re.findall(r"(?:^|\n)\s*[1-5][\.\)]\s+\S", text)
     count = max(len(letter_opts), len(num_opts))
-    return count if count >= 2 else 0
+    if count < 2:
+        return 0
+    # If we "see" too many, it's almost certainly not MCQ options.
+    if count > 10:
+        return 0
+    return count
 
 
 def _answer_looks_like_code(ca: str, lang: str) -> bool:

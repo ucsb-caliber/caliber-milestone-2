@@ -75,6 +75,10 @@ def _extract_pdf_text(path: Path) -> str:
     raw = extract_text(str(path)) or ""
     # Normalize odd PDF whitespace but keep paragraph breaks
     raw = raw.replace("\r\n", "\n").replace("\r", "\n")
+    # Page breaks from pdfminer are often \f; they are not newlines for ^ in regex, so
+    # question-start patterns like "3.  Consider" would fail to match and multiple items
+    # get glued into one blob (bad for MCQ verify).
+    raw = raw.replace("\f", "\n")
     raw = re.sub(r"[ \t]+\n", "\n", raw)
     raw = re.sub(r"\n{3,}", "\n\n", raw)
     return raw.strip()

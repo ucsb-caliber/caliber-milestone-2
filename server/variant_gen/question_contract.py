@@ -155,6 +155,23 @@ _CONCEPTUAL_MARKERS = (
 )
 
 
+def _mentions_cpp_as_required_language(tl: str) -> bool:
+    """
+    True when the stem is actually about C++ coursework.
+
+    PDFs often say things like "no C++ component whatsoever" on otherwise pure C
+    questions — a naive `'c++' in text` substring match misroutes those to cpp.
+    """
+    if "c++" not in tl:
+        return False
+    for m in re.finditer(r"c\+\+", tl):
+        window = tl[max(0, m.start() - 20) : m.start()]
+        if re.search(r"\b(no|not|without|instead of|avoid|never|isn't|isnt)\s*$", window):
+            continue
+        return True
+    return False
+
+
 def infer_programming_language(text: str) -> str:
     """Guess language from raw exam text; validators and prompts follow this."""
     o = os.getenv("QUESTION_LANG", "").strip().lower()
@@ -164,11 +181,34 @@ def infer_programming_language(text: str) -> str:
             return o
     tl = (text or "").lower()
     t = text or ""
-    if re.search(r"\b(import\s+java|public\s+static\s+void\s+main|java\.util|system\.out)\b", tl):
+    # Java / AP CS A: snippets often lack import/main; generics and keywords are the tell.
+    if (
+        re.search(r"\b(import\s+java|java\.util|public\s+static\s+void\s+main)\b", tl)
+        or "system.out" in tl
+        or "system.in" in tl
+        or re.search(r"\bpublic\s+(class|interface)\b", tl)
+        or re.search(r"\bimplements\b", tl)
+        or re.search(r"\b(class|interface)\s+\w+\s+extends\s+\w+", tl)
+        or re.search(
+            r"\b(arraylist|linkedlist|hashmap|hashset|treeset|priorityqueue|list|map|set|queue|stack)\s*<",
+            tl,
+        )
+        or " instanceof " in tl
+        or re.search(r"\bboolean\s+\w+", tl)
+        or "@override" in tl
+        or re.search(r"\b(private|protected)\s+(int|boolean|double|char)\s+\w+\s*;", t, re.I)
+        or re.search(r"\bString\s+[a-zA-Z_]\w*\s*[;=]", t)
+    ):
         return "java"
+    # Stanford CS107-style C (vector + Vector* API). Not C++; prompts/validators use "generic".
+    if re.search(
+        r"\bVector(New|Append|Dispose|Delete|Insert|Replace|Split|Length|Nth)\s*\(",
+        t,
+    ) and "std::" not in t:
+        return "generic"
     # C++ / intro-C course signals (keep broad: many PDFs lack #include in snippets)
     if (
-        "c++" in tl
+        _mentions_cpp_as_required_language(tl)
         or "cplusplus" in tl
         or "std::" in t
         or "#include" in t
@@ -215,6 +255,77 @@ def question_mode(text: str) -> str:
     return "algorithmic"
 
 
+def looks_like_structural_trace_task(text: str) -> bool:
+    """
+    Generic signal: the student must produce intermediate structure or multi-step traces.
+
+    Used to turn off thematic reskin (parking lots, recipes, …) without naming specific
+    assignments or data structures — applies to heaps, trees, sorts, automata traces, etc.
+    """
+    t = (text or "").lower()
+    if any(
+        s in t
+        for s in (
+            "after each",
+            "following each",
+            "step-by-step",
+            "step by step",
+            "successive ",
+            "intermediate state",
+            "show the state",
+            "state after",
+            "draw the",
+            "illustrate each",
+            "trace the",
+            " record the state",
+        )
+    ):
+        return True
+    if "starting from" in t and any(
+        w in t
+        for w in (
+            "insert",
+            "delete",
+            "deletemin",
+            "delete min",
+            "remove",
+            "operation",
+            "performed",
+        )
+    ):
+        return True
+    if "after performing" in t and any(
+        w in t for w in ("operation", "insertion", "deletion", "step", "removal")
+    ):
+        return True
+    return False
+
+
+def looks_like_named_function_write_task(text: str) -> bool:
+    """
+    Specs that pin a function name/signature — reskinning tends to drift types and fail verify.
+
+    Kept generic (any PDF that says "write a function named …"), not tied to one course.
+    """
+    t = re.sub(r"\s+", " ", (text or "").lower())
+    return bool(
+        re.search(r"\bwrite\s+a\s+function\s+named\b", t)
+        or re.search(r"\bwrite\s+a\s+function\s+called\b", t)
+        or re.search(r"\bimplement\s+a\s+function\s+named\b", t)
+        or re.search(r"\bdefine\s+a\s+function\s+named\b", t)
+    )
+
+
+def _conceptual_cs_only_scenario() -> dict:
+    """Same theme block as conceptual mode — CS surface, no unrelated domains."""
+    return {
+        "style": "conceptual",
+        "theme": "Computer science course (same domain as the original)",
+        "swap_nouns": "(do not use — keep CS vocabulary from the original)",
+        "example": "Keep questions about sequences as questions about sequences; only tighten prose.",
+    }
+
+
 @dataclass
 class QuestionContract:
     """Immutable-ish bundle of routing decisions for one source question."""
@@ -233,7 +344,11 @@ def build_question_contract(text: str) -> QuestionContract:
     _ = os.getenv("QUESTION_ROUTER", "rules").strip().lower()  # reserved for llm router
     lang = infer_programming_language(text)
     mode = question_mode(text)
-    allow = mode == "algorithmic"
+    allow = (
+        mode == "algorithmic"
+        and not looks_like_structural_trace_task(text)
+        and not looks_like_named_function_write_task(text)
+    )
     return QuestionContract(language=lang, mode=mode, allow_thematic_reskin=allow, routing_source="rules")
 
 
@@ -242,12 +357,10 @@ def scenario_from_contract(contract: QuestionContract) -> dict:
     if contract.mode == "class_design":
         return {"style": "swe", **random.choice(SWE_SCENARIOS)}
     if contract.mode == "conceptual":
-        return {
-            "style": "conceptual",
-            "theme": "Computer science course (same domain as the original)",
-            "swap_nouns": "(do not use — keep CS vocabulary from the original)",
-            "example": "Keep questions about sequences as questions about sequences; only tighten prose.",
-        }
+        return _conceptual_cs_only_scenario()
+    if not contract.allow_thematic_reskin:
+        # Algorithmic but trace-heavy, named-function spec, etc. — keep CS framing like conceptual.
+        return _conceptual_cs_only_scenario()
     return {"style": "reskin", **random.choice(THEMATIC_RESKINS)}
 
 
