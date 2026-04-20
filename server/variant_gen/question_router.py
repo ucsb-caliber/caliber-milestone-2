@@ -21,7 +21,11 @@ from .config import (
     resolved_question_router_model,
 )
 from .llm_client import call_llm
-from .question_contract import QuestionContract, build_question_contract
+from .question_contract import (
+    QuestionContract,
+    build_question_contract,
+    expected_mcq_options_for_stem,
+)
 
 _ALLOWED_FORMATS = frozenset({"MCQ", "FREE_RESPONSE", "TRUE_FALSE"})
 _ALLOWED_LANGS = frozenset({"python", "cpp", "java", "generic"})
@@ -108,6 +112,7 @@ def _try_llm_route_stem(text: str) -> Optional[QuestionContract]:
         mode=base.mode,
         allow_thematic_reskin=base.allow_thematic_reskin,
         question_format=fmt,
+        expected_mcq_options=expected_mcq_options_for_stem(text, fmt, lang),
         routing_source="llm",
     )
 

@@ -21,6 +21,7 @@ public class Circle implements Shape { }
         self.assertEqual(c.question_format, "MCQ")
         self.assertEqual(c.routing_source, "rules")
         self.assertEqual(c.language, "java")
+        self.assertGreaterEqual(c.expected_mcq_options, 2)
 
     def test_cs107_negated_cpp_is_generic(self):
         from variant_gen.question_router import route_stem

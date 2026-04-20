@@ -24,7 +24,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from .question_inputs import detect_format
+from .question_inputs import count_options, detect_format
 
 _SERVER_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(_SERVER_DIR / ".env")
@@ -168,6 +168,7 @@ def _mentions_cpp_as_required_language(tl: str) -> bool:
         return False
     for m in re.finditer(r"c\+\+", tl):
         window = tl[max(0, m.start() - 20) : m.start()]
+        # "no C++ …" still contains the letters c++ — skip those hits.
         if re.search(r"\b(no|not|without|instead of|avoid|never|isn't|isnt)\s*$", window):
             continue
         return True
@@ -328,6 +329,21 @@ def _conceptual_cs_only_scenario() -> dict:
     }
 
 
+def expected_mcq_options_for_stem(text: str, question_format: str, language: str) -> int:
+    """
+    MCQ option count passed to ``is_invalid_variant``. 0 means do not enforce length
+    (C++ PDFs: numbered code lines look like A./1. options; ambiguous stems).
+    """
+    if question_format != "MCQ":
+        return 0
+    n = count_options(text)
+    if n < 2:
+        n = 4
+    if language == "cpp":
+        return 0
+    return n
+
+
 @dataclass
 class QuestionContract:
     """Immutable-ish bundle of routing decisions for one source question."""
@@ -336,6 +352,7 @@ class QuestionContract:
     mode: str
     allow_thematic_reskin: bool
     question_format: str
+    expected_mcq_options: int
     routing_source: str = "rules"
 
 
@@ -354,11 +371,13 @@ def build_question_contract(text: str) -> QuestionContract:
         and not looks_like_named_function_write_task(text)
     )
     qf = detect_format(text)
+    emcq = expected_mcq_options_for_stem(text, qf, lang)
     return QuestionContract(
         language=lang,
         mode=mode,
         allow_thematic_reskin=allow,
         question_format=qf,
+        expected_mcq_options=emcq,
         routing_source="rules",
     )
 

@@ -38,7 +38,6 @@ from .variant_validation import (
     is_too_similar,
     normalize_answer,
     similarity_threshold_for_original,
-    count_options,
 )
 
 
@@ -104,12 +103,7 @@ def generate_variant(index, db_path=None, ingestion_index=-1, questions_db=None)
     algorithm = extract_algorithm(q.get("text", ""))
     contract = route_stem(q.get("text", "") or "")
     forced_type = contract.question_format
-    expected_mcq_options = count_options(q.get("text", ""))
-    if forced_type == "MCQ" and expected_mcq_options < 2:
-        expected_mcq_options = 4
-    # C++ PDFs often use "1. 2. 3." line numbers before statements; count_options is unreliable.
-    if forced_type == "MCQ" and contract.language == "cpp":
-        expected_mcq_options = 0
+    expected_mcq_options = contract.expected_mcq_options
     gen_label = resolved_openrouter_model()
     print(
         f"Format: {forced_type} | Algorithm: {algorithm} | Mode: {contract.mode} | "

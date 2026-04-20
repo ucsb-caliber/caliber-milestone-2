@@ -10,7 +10,8 @@ from .question_contract import (
     language_display,
     looks_like_named_function_write_task,
 )
-from .variant_validation import count_options, original_asks_for_code_submission
+from .question_inputs import count_options
+from .variant_validation import original_asks_for_code_submission
 
 
 def _verify_output_only_hint(variant_text: str) -> str:

@@ -143,3 +143,16 @@ def detect_format(text: str) -> str:
     ) and any(k in text_lower for k in mcq_phrases):
         return "MCQ"
     return "FREE_RESPONSE"
+
+
+def count_options(text: str) -> int:
+    # Only treat explicit "A)" / "A." / "1)" / "1." patterns as options.
+    # Tree/traversal dumps can look like dozens of fake options — cap and bail to 0.
+    letter_opts = re.findall(r"(?:^|\n)\s*[A-E][\.\)]\s+\S", text)
+    num_opts = re.findall(r"(?:^|\n)\s*[1-5][\.\)]\s+\S", text)
+    count = max(len(letter_opts), len(num_opts))
+    if count < 2:
+        return 0
+    if count > 10:
+        return 0
+    return count

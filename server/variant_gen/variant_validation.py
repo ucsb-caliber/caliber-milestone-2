@@ -79,7 +79,8 @@ def original_asks_for_code_submission(original_text: Optional[str]) -> bool:
     )
 
 
-def _variant_asks_for_python_code(variant: Dict[str, Any]) -> bool:
+def _variant_asks_for_code_submission(variant: Dict[str, Any]) -> bool:
+    """True if the *variant* text asks the student to submit code (any language)."""
     blob = " ".join(
         str(variant.get(k) or "")
         for k in ("variant_text", "task", "constraints")
@@ -140,21 +141,6 @@ def mcq_correct_option_label(correct_answer: Any, options: Any) -> Tuple[Optiona
         if k and k in options:
             return k, str(options[k]).strip().lower()
     return None, None
-
-
-def count_options(text: str) -> int:
-    # Only treat explicit "A)" / "A." / "1)" / "1." patterns as options.
-    # Some stems (trees, traversals, stacks) contain many incidental letters/numbers; if we
-    # detect an implausibly large option count, disable enforcement (return 0).
-    letter_opts = re.findall(r"(?:^|\n)\s*[A-E][\.\)]\s+\S", text)
-    num_opts = re.findall(r"(?:^|\n)\s*[1-5][\.\)]\s+\S", text)
-    count = max(len(letter_opts), len(num_opts))
-    if count < 2:
-        return 0
-    # If we "see" too many, it's almost certainly not MCQ options.
-    if count > 10:
-        return 0
-    return count
 
 
 def _answer_looks_like_code(ca: str, lang: str) -> bool:
@@ -230,7 +216,7 @@ def free_response_correct_answer_invalid(
 
     # Only treat as "must submit code" if the *source* asked for it. Reskins often
     # add "write a function…" even for trace-the-output / fill-in questions.
-    require_code = _variant_asks_for_python_code(variant) and original_asks_for_code_submission(
+    require_code = _variant_asks_for_code_submission(variant) and original_asks_for_code_submission(
         original_text or ""
     )
 
