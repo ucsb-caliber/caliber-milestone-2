@@ -33,6 +33,7 @@
 **/lib/
 **/lib64/
 **/site-packages/
+.env
 
 # macOS
 **/.DS_Store

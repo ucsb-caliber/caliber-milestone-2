@@ -38,6 +38,7 @@ yacs==0.1.8
 # LLM / API
 # ---------------------------
 openai==2.15.0
+python-dotenv>=1.0.0
 
 # ---------------------------
 # Optional (only if actually used)
