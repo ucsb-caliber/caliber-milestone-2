@@ -11,7 +11,6 @@ from .question_contract import (
     looks_like_named_function_write_task,
 )
 from .question_inputs import count_options
-from .variant_validation import original_asks_for_code_submission
 
 
 def _verify_output_only_hint(variant_text: str) -> str:
@@ -93,19 +92,24 @@ def prompt_extras(original_text: str, forced_type: str, style: str, contract: Qu
             "for the standard used in the course."
         )
 
+    is_trace_like = contract.mode == "algorithmic" and not contract.allow_thematic_reskin
+
     if forced_type == "FREE_RESPONSE":
         if contract.mode == "conceptual":
             chunks.append(
                 f"CONCEPTUAL: stay in {language_display(lang)} and CS ideas from the original; theme is only a hook. "
                 "Do not replace with unrelated domains. Do not put the full solution in variant_text or task."
             )
-            if not original_asks_for_code_submission(original_text or ""):
-                chunks.append(
-                    "The original asks for explanation or comparison only — do NOT turn it into a coding exercise "
-                    "(e.g. do not add 'write a function' or require implementation) unless the source explicitly "
-                    "asked for code."
-                )
-        elif contract.mode == "algorithmic" and not contract.allow_thematic_reskin:
+        if is_trace_like:
+            chunks.append(
+                "MULTI-STEP / STRUCTURE TASK: Stay in normal CS and data-structure vocabulary. "
+                "Do not wrap the problem in an unrelated real-world metaphor. "
+                "Preserve every requirement to show intermediate states, diagrams, or step-by-step structure "
+                "as clearly as in the original (same level of detail)."
+            )
+
+    if forced_type == "CODING":
+        if is_trace_like:
             chunks.append(
                 "MULTI-STEP / STRUCTURE TASK: Stay in normal CS and data-structure vocabulary. "
                 "Do not wrap the problem in an unrelated real-world metaphor. "
@@ -213,17 +217,24 @@ FORMAT CONSTRAINTS (MCQ):
 FORMAT CONSTRAINTS (TRUE/FALSE):
 - The statement must be clearly true or false with no ambiguity.
 - Keep the same truth value as the original if possible."""
-    else:
+    elif forced_type == "CODING":
         format_rules = f"""
-FORMAT CONSTRAINTS (FREE RESPONSE):
-- If the original asks to write a function, the variant must ask to write a function.
-- If the original asks to write a class, the variant must ask to write a class.
-- If the original asks for an explanation, the variant must ask for an explanation.
-- Preserve the same level of detail expected in the answer.
-- correct_answer MUST be non-empty.
-- If the question asks for code, correct_answer must be valid {ld} source (not prose about what it "should" do).
-- If the question asks for a prose explanation, correct_answer must be a concrete model answer (real sentences),
+FORMAT CONSTRAINTS (CODING — student submits source code):
+- The variant must still ask for real {ld} (or generic/C) source, not prose pretending to be code.
+- correct_answer MUST be non-empty, runnable-looking source that solves the stated task (not a rubric).
+- variant_text is the problem statement and any starter/snippet; put the full reference solution ONLY in correct_answer
+  unless the original intentionally shows partial code in the prompt.
+- Never use meta phrases like "The student should" in correct_answer.
+- Do not paste the entire solution into variant_text or task — keep the student-facing layer readable."""
+    else:
+        format_rules = """
+FORMAT CONSTRAINTS (FREE RESPONSE — prose / conceptual / traces):
+- If the original asks for an explanation or comparison, the variant must ask the same kind of thing.
+- If the original asks for a trace, step count, or written output of a program, preserve that shape.
+- correct_answer MUST be non-empty: concrete model prose or the exact trace/output the grader expects,
   not grading instructions (never start with "The student should" or "The correct answer should").
+- Do NOT turn a prose-only question into "write a function" unless the source explicitly asked for code —
+  that belongs in CODING, not FREE_RESPONSE.
 - Do not put the full model answer in variant_text or task; only correct_answer holds it."""
 
     return f"""You are creating a variant of a CS exam question. The variant should feel like a
@@ -308,7 +319,7 @@ OUTPUT JSON:
     "final_answer": "..."
 }}"""
 
-    conceptual = contract.mode == "conceptual"
+    conceptual = contract.mode == "conceptual" and forced_type != "CODING"
     code_only_invalid = (
         ""
         if conceptual

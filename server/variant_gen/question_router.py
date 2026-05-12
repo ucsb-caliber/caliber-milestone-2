@@ -27,7 +27,7 @@ from .question_contract import (
     expected_mcq_options_for_stem,
 )
 
-_ALLOWED_FORMATS = frozenset({"MCQ", "FREE_RESPONSE", "TRUE_FALSE"})
+_ALLOWED_FORMATS = frozenset({"MCQ", "FREE_RESPONSE", "TRUE_FALSE", "CODING"})
 _ALLOWED_LANGS = frozenset({"python", "cpp", "java", "generic"})
 
 
@@ -59,6 +59,9 @@ def _normalize_format(val: Any) -> Optional[str]:
         "TRUEFALSE": "TRUE_FALSE",
         "T_F": "TRUE_FALSE",
         "TF": "TRUE_FALSE",
+        "CODING": "CODING",
+        "CODE": "CODING",
+        "IMPLEMENTATION": "CODING",
     }
     s = aliases.get(s, s)
     return s if s in _ALLOWED_FORMATS else None
@@ -76,13 +79,16 @@ def _llm_router_prompt(stem: str) -> str:
     return (
         "You classify an exam question stem for an automated variant generator.\n"
         "Return ONLY one JSON object (no markdown) with exactly these keys:\n"
-        '  "question_format": one of MCQ, FREE_RESPONSE, TRUE_FALSE\n'
+        '  "question_format": one of MCQ, FREE_RESPONSE, TRUE_FALSE, CODING\n'
         '  "language": one of python, cpp, java, generic\n'
         "Rules:\n"
         "- MCQ: student picks labeled options (A–E, 1–5, or (a)–(e)), including Roman-numeral clauses "
         "with lettered answer choices.\n"
         "- TRUE_FALSE: explicit true/false style.\n"
-        "- FREE_RESPONSE: written answer, traces, code to write, proofs, etc.\n"
+        "- FREE_RESPONSE: prose answers only — explain, compare, trace output, prove, runtime discussion; "
+        "not a full program submission.\n"
+        "- CODING: student must write or complete substantial source code (functions, classes, fill-in program, "
+        "implement following, etc.).\n"
         "- generic: stem is clearly C, Scheme, mixed course-specific code, or language is ambiguous; "
         "do not default to python unless the stem is actually Python.\n"
         "- java: AP-style or explicit Java syntax (class/interface, public static void, etc.).\n"
@@ -113,6 +119,7 @@ def _try_llm_route_stem(text: str) -> Optional[QuestionContract]:
         allow_thematic_reskin=base.allow_thematic_reskin,
         question_format=fmt,
         expected_mcq_options=expected_mcq_options_for_stem(text, fmt, lang),
+        autograde_kind=fmt,
         routing_source="llm",
     )
 
@@ -146,6 +153,7 @@ def telemetry_routing_line(question_id: str, contract: QuestionContract) -> str:
         "language": contract.language,
         "mode": contract.mode,
         "allow_thematic_reskin": contract.allow_thematic_reskin,
+        "autograde_kind": contract.autograde_kind,
     }
     return f"[variant_gen:telemetry] {json.dumps(payload, ensure_ascii=False)}"
 

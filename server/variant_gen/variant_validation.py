@@ -12,6 +12,7 @@ from .question_contract import (
     free_response_cs_vocabulary_lost,
     language_display,
 )
+from .question_inputs import original_asks_for_code_submission
 
 
 def similarity_threshold_for_original(original_text: str) -> float:
@@ -58,25 +59,6 @@ _META_ANSWER_SNIPPETS = (
     "must be a function definition that",
     "solution should use",
 )
-
-
-def original_asks_for_code_submission(original_text: Optional[str]) -> bool:
-    t = (original_text or "").lower()
-    return any(
-        p in t
-        for p in (
-            "write a function",
-            "write a class",
-            "write pseudocode",
-            "recursive function",
-            "implement a function",
-            "define a function",
-            "complete the following program",
-            "complete the following code",
-            "write the following function",
-            "implement the following",
-        )
-    )
 
 
 def _variant_asks_for_code_submission(variant: Dict[str, Any]) -> bool:
@@ -268,13 +250,15 @@ def is_invalid_variant(
     if ca is None:
         ca = ""
 
-    if forced_type == "FREE_RESPONSE":
+    if forced_type in ("FREE_RESPONSE", "CODING"):
         fr_err = free_response_correct_answer_invalid(
             ca, variant, lang, contract, original_text
         )
         if fr_err:
             return fr_err
-        if free_response_cs_vocabulary_lost(original_text, variant, contract):
+        if forced_type == "FREE_RESPONSE" and free_response_cs_vocabulary_lost(
+            original_text, variant, contract
+        ):
             return "conceptual FR drifted off-topic (keep CS terms from the original, not a novelty theme)"
         ca_str = ca if isinstance(ca, str) else str(ca)
         if _variant_code_blob_heuristic(vt_raw, lang):

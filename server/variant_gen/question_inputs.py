@@ -1,9 +1,63 @@
 """Classify raw exam text: skip rules, vision, format, coarse algorithm tag."""
 
 import re
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from .config import _ALGORITHM_PATTERNS, openrouter_vision_enabled
+
+
+def original_asks_for_code_submission(original_text: Optional[str]) -> bool:
+    """Source stem asks the student to submit code (validators, prompts, vision skip)."""
+    t = (original_text or "").lower()
+    return any(
+        p in t
+        for p in (
+            "write a function",
+            "write a class",
+            "write pseudocode",
+            "recursive function",
+            "implement a function",
+            "define a function",
+            "complete the following program",
+            "complete the following code",
+            "write the following function",
+            "implement the following",
+        )
+    )
+
+
+def stem_routes_as_coding_format(text: str) -> bool:
+    """
+    Narrower than ``original_asks_for_code_submission``: use for ``question_format`` == CODING only.
+
+    Goal: autograder "code runner" path for real implementation (method/class/algorithm). Short
+    fill-in-the-blank or one-hole snippets stay FREE_RESPONSE even if they say "complete the code".
+    """
+    if not original_asks_for_code_submission(text):
+        return False
+    t = (text or "").lower()
+    # Typical one-line / blank style — prose FR autograder (rubric / partial credit).
+    if any(
+        p in t
+        for p in (
+            "fill in the blank",
+            "fill in the missing",
+            "fill-in the blank",
+            "fill in each",
+            "missing line",
+            "missing expression",
+            "replace ____",
+            "replace the ____",
+            "insert the missing",
+            "what expression should go",
+            "what should replace",
+        )
+    ):
+        return False
+    if "____" in t:
+        return False
+    # "Complete the following code" is often a whole method; keep CODING unless blank-style above matched.
+    return True
 
 
 def extract_algorithm(text: str) -> str:
@@ -38,7 +92,7 @@ def should_skip_question(text: str) -> bool:
 
 def _is_code_or_written_answer_question(text: str) -> bool:
     t = text.lower()
-    return any(
+    return original_asks_for_code_submission(text) or any(
         p in t
         for p in (
             "write a function",
@@ -113,12 +167,9 @@ def detect_format(text: str) -> str:
     if "true" in text_lower and "false" in text_lower:
         if len(text) < 200 or "select" in text_lower:
             return "TRUE_FALSE"
-    # Coding / written tasks often include numbered lines or lettered bullets; classify before MCQ heuristics.
-    if re.search(
-        r"\b(?:write\s+pseudocode|write\s+a\s+(?:function|class|method)|recursive\s+function)\b",
-        text_lower,
-    ):
-        return "FREE_RESPONSE"
+    # Substantial implementation (function/class/algorithm) → CODING autograder path, not prose FR.
+    if stem_routes_as_coding_format(text):
+        return "CODING"
     has_mcq = re.search(r"(?:^|\n|\s)(?:[A-E]|[1-5])[\.\)]\s+\w+", text)
     if has_mcq and _looks_like_numbered_written_subproblems(text):
         return "FREE_RESPONSE"
@@ -150,7 +201,8 @@ def count_options(text: str) -> int:
     # Tree/traversal dumps can look like dozens of fake options — cap and bail to 0.
     letter_opts = re.findall(r"(?:^|\n)\s*[A-E][\.\)]\s+\S", text)
     num_opts = re.findall(r"(?:^|\n)\s*[1-5][\.\)]\s+\S", text)
-    count = max(len(letter_opts), len(num_opts))
+    paren_opts = len(re.findall(r"(?:^|\n|\s)\(\s*([A-E])\s*\)", text, flags=re.IGNORECASE))
+    count = max(len(letter_opts), len(num_opts), paren_opts)
     if count < 2:
         return 0
     if count > 10:

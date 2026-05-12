@@ -44,11 +44,13 @@ Tail trim: boilerplate headings like “answer key” / “solutions to…” ge
 
 ## Routing (`question_contract`, `question_inputs`, `question_router`)
 
-Everything downstream reads a **`QuestionContract`**: `language`, `mode`, `allow_thematic_reskin`, `question_format` (MCQ / FREE_RESPONSE / TRUE_FALSE), **`expected_mcq_options`** (how strictly we enforce MCQ option count), `routing_source`.
+Everything downstream reads a **`QuestionContract`**: `language`, `mode`, `allow_thematic_reskin`, **`question_format`** (`MCQ` | `FREE_RESPONSE` | `CODING` | `TRUE_FALSE`), **`expected_mcq_options`**, **`autograde_kind`**, `routing_source`.
+
+**Formats:** **`FREE_RESPONSE`** is prose, traces, short answers, and **fill-in-the-blank / one-hole code** (still code-shaped answers sometimes, but not the “full implementation” autograder path). **`CODING`** is routed only when ``stem_routes_as_coding_format`` says so: same broad “asks for code” phrases as validators, **minus** obvious blank/fill-in stems (see ``question_inputs.py``). **`autograde_kind`** matches **`question_format`**.
 
 **`route_stem(text)`** is the only entry from `generator.py`. Rules path = `build_question_contract`. Optional **`QUESTION_ROUTER=llm`**: one small JSON call sets `question_format` + `language` only; mode and reskin stay rule-derived so we don’t accidentally enable parking-lot reskins on trace questions. Bad router output → rules fallback (one console line).
 
-**Format (`detect_format`)** order matters: true/false stubs early; “write a function / pseudocode” forces FR before loose MCQ regexes; numbered multi-part worksheets can look like MCQ lines—bail to FR; `(a)`–`(e)` plus “which of the following” catches AP-style lettered answers that `A.` regexes miss.
+**Format (`detect_format`)** order matters: true/false stubs early; **`stem_routes_as_coding_format`** (substantial implementation, not fill-in-blank) → **`CODING`** before MCQ heuristics; numbered multi-part worksheets can look like MCQ lines—bail to **FREE_RESPONSE**; `(a)`–`(e)` plus “which of the following” catches AP-style lettered answers that `A.` regexes miss.
 
 **Language** tries Java/AP signals before the loose C++ `int x = …;` heuristic so snippets without `import` don’t land as Python. Stanford-style `VectorNew` / `VectorSplit` + no `std::` → **`generic`** so we don’t demand C++-shaped answers for C. **`_mentions_cpp_as_required_language`** exists because “no C++ whatsoever” still contains the substring `c++`. Default fallthrough is still **python** for ambiguous prose (Scheme, etc.): that’s lazy but fixable with `QUESTION_LANG` or the router.
 

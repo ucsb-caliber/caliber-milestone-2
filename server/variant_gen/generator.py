@@ -161,7 +161,7 @@ def generate_variant(index, db_path=None, ingestion_index=-1, questions_db=None)
         late_fr = free_response_correct_answer_invalid(
             gen_ans, variant, contract.language, contract, q.get("text", "")
         )
-        if forced_type == "FREE_RESPONSE" and late_fr:
+        if forced_type in ("FREE_RESPONSE", "CODING") and late_fr:
             print(f"  Invalid correct_answer: {late_fr}")
             continue
 
@@ -213,6 +213,7 @@ def generate_variant(index, db_path=None, ingestion_index=-1, questions_db=None)
                     else len(ingestions) + ingestion_index
                 ),
                 "type": forced_type,
+                "autograde_kind": contract.autograde_kind,
                 "language": contract.language,
                 "question_mode": contract.mode,
                 "routing": contract.routing_source,

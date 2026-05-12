@@ -353,12 +353,13 @@ class QuestionContract:
     allow_thematic_reskin: bool
     question_format: str
     expected_mcq_options: int
+    autograde_kind: str
     routing_source: str = "rules"
 
 
 def build_question_contract(text: str) -> QuestionContract:
     """
-    Rule-based stem router (language, mode, reskin, MCQ vs FR vs TF).
+    Rule-based stem router (language, mode, reskin, MCQ / FREE_RESPONSE / CODING / TRUE_FALSE).
 
     For optional LLM assist on format/language only, use ``route_stem`` in
     ``question_router.py`` (``QUESTION_ROUTER=llm``).
@@ -378,6 +379,7 @@ def build_question_contract(text: str) -> QuestionContract:
         allow_thematic_reskin=allow,
         question_format=qf,
         expected_mcq_options=emcq,
+        autograde_kind=qf,
         routing_source="rules",
     )
 
